@@ -4,7 +4,7 @@
    改样式或内容后把 CACHE_VERSION 加一，旧缓存会在 activate 时清掉。
    ============================================================ */
 
-const CACHE_VERSION = "ai-study-v1";
+const CACHE_VERSION = "ai-study-v2";
 
 const PRECACHE = [
   "./",
