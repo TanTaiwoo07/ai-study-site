@@ -1,0 +1,11 @@
+# 系统与编辑器杂项
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 临时文件
+*.tmp
+*.log
+
+# 工具内部数据（工作日志等，不上传）
+.workbuddy/

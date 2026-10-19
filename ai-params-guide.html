@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI 模型参数，一看就懂</title>
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#faf9f5" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="AI 学习站" />
+<style>
+/* ============================================================
+   Claude 风格主题
+   暖白纸感背景 + 陶土橙强调 + 衬线标题 + 克制的边框
+   语义色：能力 = clay / 成本 = ochre / 风险 = risk / 效率 = sage
+   ============================================================ */
+:root {
+  /* 纸面与墨色 */
+  --bg: #faf9f5;
+  --bg-deep: #f2efe6;
+  --card: #ffffff;
+  --card-soft: #f7f5ee;
+  --line: #e4dfd2;
+  --line-soft: #eeeae0;
+  --ink: #1f1e1d;
+  --ink-2: #45433f;
+  --dim: #6b675f;
+  --faint: #918c82;
+
+  /* 语义色（低饱和大地色系） */
+  --clay: #c15f3c;
+  --clay-deep: #a34b2c;
+  --clay-wash: #f8ede7;
+  --sage: #5b7a63;
+  --sage-wash: #edf2ed;
+  --ochre: #98793d;
+  --ochre-wash: #f8f2e3;
+  --risk: #8e3b2e;
+  --risk-wash: #f9e9e4;
+
+  --serif: Georgia, "Songti SC", "STSong", "Noto Serif SC", "SimSun", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  --r: 14px;
+  --r-sm: 9px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(900px 420px at 50% -6%, rgba(193, 95, 60, .05) 0%, rgba(250, 249, 245, 0) 65%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.72;
+  -webkit-font-smoothing: auto;
+}
+
+h1, h2, h3 { line-height: 1.3; margin: 0; font-family: var(--serif); font-weight: 600; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+strong { color: var(--ink); font-weight: 650; }
+em { font-style: normal; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px; }
+
+/* ---------- 顶部导航 ---------- */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250, 249, 245, .88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner { display: flex; align-items: center; gap: 20px; height: 62px; }
+.brand {
+  font-family: var(--serif); font-weight: 700; font-size: 16px;
+  letter-spacing: .01em; white-space: nowrap;
+}
+.brand span { color: var(--clay); }
+.nav-links {
+  display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
+  -ms-overflow-style: none; flex: 1; min-width: 0;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-links a {
+  font-size: 13.5px; color: var(--dim); padding: 7px 12px;
+  border-radius: 8px; white-space: nowrap; transition: .16s;
+}
+.nav-links a:hover { color: var(--ink); background: var(--bg-deep); }
+
+/* ---------- 通用区块 ---------- */
+section { padding: 92px 0 0; }
+
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--clay); font-weight: 700; margin-bottom: 12px;
+}
+.sec-head { margin-bottom: 30px; }
+.sec-head h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.01em; }
+.sec-head p { color: var(--dim); margin-top: 10px; max-width: 64ch; font-size: 15px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 26px;
+}
+
+.mnemonic {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 600;
+  padding: 5px 12px; border-radius: 99px;
+  background: var(--clay-wash);
+  border: 1px solid rgba(193, 95, 60, .22);
+  color: var(--clay-deep);
+  font-family: var(--serif);
+}
+.mnemonic::before {
+  content: "口诀"; font-family: var(--sans); font-size: 10px;
+  letter-spacing: .12em; opacity: .7;
+}
+
+.pill {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  padding: 4px 11px; border-radius: 99px; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.pill-cap  { background: var(--clay-wash);  border-color: rgba(193,95,60,.28);  color: var(--clay-deep); }
+.pill-cost { background: var(--ochre-wash); border-color: rgba(152,121,61,.3);  color: var(--ochre); }
+.pill-risk { background: var(--risk-wash);  border-color: rgba(142,59,46,.28);  color: var(--risk); }
+.pill-ok   { background: var(--sage-wash);  border-color: rgba(91,122,99,.3);   color: var(--sage); }
+
+.note {
+  font-size: 13.5px; color: var(--dim); line-height: 1.7;
+  background: var(--card-soft);
+  border-left: 2px solid var(--line);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 12px 16px; margin-top: 18px;
+}
+.note b { color: var(--clay-deep); font-weight: 650; }
+
+/* ---------- 首屏 ---------- */
+.hero { padding-top: 68px; }
+.hero h1 {
+  font-size: clamp(32px, 5.8vw, 52px);
+  font-weight: 600; margin-bottom: 18px; letter-spacing: -.015em;
+  text-wrap: balance;
+}
+.hero h1 .accent { color: var(--clay); }
+.lede { font-size: clamp(16px, 2.2vw, 18px); color: var(--ink-2); max-width: 58ch; }
+.hint {
+  font-size: 13.5px; color: var(--dim); max-width: 70ch; margin-top: 18px;
+  padding: 13px 16px; border-radius: var(--r-sm);
+  background: var(--ochre-wash);
+  border-left: 2px solid rgba(152, 121, 61, .45);
+  line-height: 1.7;
+}
+
+/* ---------- B 值滑杆 ---------- */
+.scale-card { margin-top: 34px; }
+.scale-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.scale-label { font-size: 12.5px; color: var(--faint); letter-spacing: .05em; }
+.big-number {
+  font-family: var(--serif);
+  font-size: clamp(44px, 9.5vw, 68px); font-weight: 700; line-height: 1.08;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ink); letter-spacing: -.02em;
+  transition: .2s;
+}
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 99px; outline: none;
+  background: var(--line); cursor: pointer; margin: 8px 0 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--clay);
+  box-shadow: 0 1px 3px rgba(31, 30, 29, .18);
+  transition: transform .15s, border-color .15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { border-color: var(--clay-deep); }
+input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.1); }
+input[type="range"]::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--card); border: 2px solid var(--clay);
+  box-shadow: 0 1px 3px rgba(31, 30, 29, .18); cursor: pointer;
+}
+
+.ticks {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; font-size: 11.5px; color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.ticks span { flex: 1; text-align: center; }
+.ticks span:first-child { text-align: left; }
+.ticks span:last-child { text-align: right; }
+
+.info-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 26px; }
+@media (min-width: 760px) { .info-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.info-tile {
+  background: var(--card-soft); border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm); padding: 14px 16px;
+}
+.info-tile .k { font-size: 11.5px; color: var(--faint); letter-spacing: .07em; margin-bottom: 6px; }
+.info-tile .v { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+
+.meter-row { margin-top: 24px; display: grid; gap: 16px; }
+.meter { display: grid; grid-template-columns: 84px 1fr 42px; align-items: center; gap: 12px; }
+.meter .m-label { font-size: 12.5px; color: var(--dim); }
+.meter .m-track {
+  height: 6px; border-radius: 99px; background: var(--line-soft); overflow: hidden;
+}
+.meter .m-fill { height: 100%; width: 0; border-radius: 99px; transition: width .4s ease; }
+.meter .m-num { font-size: 12px; color: var(--faint); text-align: right; font-variant-numeric: tabular-nums; }
+.fill-cap  { background: var(--clay); }
+.fill-cost { background: var(--ochre); }
+
+/* ---------- 能力阶梯 ---------- */
+.ladder-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 900px) { .ladder-layout { grid-template-columns: 1.02fr 1fr; align-items: start; } }
+
+.ladder { display: grid; gap: 10px; }
+.step {
+  position: relative; display: grid; grid-template-columns: 96px 1fr;
+  align-items: center; gap: 16px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 16px 18px;
+  cursor: pointer; transition: .2s; text-align: left; width: 100%;
+  color: inherit; font-family: inherit; font-size: inherit;
+}
+.step:hover { border-color: #d3ccbc; background: #fdfcfa; }
+.step.is-active { border-color: var(--clay); background: var(--clay-wash); }
+.step .bar {
+  height: 32px; border-radius: 5px; width: 100%; max-width: 96px;
+  background: var(--clay); opacity: .45;
+  transition: .28s;
+}
+.step.is-active .bar { opacity: 1; }
+.step .txt { min-width: 0; }
+.step .range {
+  font-size: 12px; color: var(--clay); font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em;
+}
+.step .title { font-size: 15px; font-weight: 600; color: var(--ink); font-family: var(--serif); }
+
+.ladder-detail {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 24px;
+  position: sticky; top: 84px;
+}
+@media (max-width: 899px) { .ladder-detail { position: static; } }
+.detail-title {
+  font-family: var(--serif); font-size: 19px; font-weight: 600; margin-bottom: 8px;
+}
+.detail-ability { font-size: 14.5px; color: var(--ink-2); margin-bottom: 18px; }
+.example-box {
+  border-radius: var(--r-sm); padding: 16px; margin-bottom: 16px;
+  background: var(--card-soft); border-left: 2px solid var(--line);
+}
+.example-box .q { font-size: 12px; color: var(--faint); margin-bottom: 7px; letter-spacing: .05em; }
+.example-box .a { font-size: 14.5px; color: var(--ink); }
+.example-box .a em { color: var(--clay-deep); font-style: italic; }
+.detail-note { font-size: 13px; color: var(--faint); line-height: 1.65; }
+
+/* ---------- MoE ---------- */
+.moe-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+@media (min-width: 900px) { .moe-layout { grid-template-columns: 1.12fr 1fr; align-items: start; } }
+
+.pool {
+  display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 5px; padding: 16px;
+  background: var(--card-soft); border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+}
+.expert {
+  aspect-ratio: 1 / 1; border-radius: 3px;
+  background: #eae5d8; border: 1px solid #e2dccb;
+  transition: background .3s ease, border-color .3s ease, opacity .3s ease;
+}
+.expert.active { background: var(--clay); border-color: var(--clay); }
+.expert.active.dense { background: var(--risk); border-color: var(--risk); }
+
+.moe-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+.btn {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  padding: 10px 20px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  transition: .18s;
+}
+.btn:hover { border-color: #d3ccbc; background: var(--card-soft); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--clay); border-color: var(--clay); color: #fdfbf8;
+  box-shadow: 0 1px 2px rgba(193, 95, 60, .25);
+}
+.btn-primary:hover { background: var(--clay-deep); border-color: var(--clay-deep); }
+
+.switch-row { display: flex; align-items: center; gap: 11px; margin-top: 18px; font-size: 14px; color: var(--dim); }
+.switch { position: relative; width: 44px; height: 25px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .slider {
+  position: absolute; inset: 0; border-radius: 99px; cursor: pointer;
+  background: #ded9cc; border: 1px solid #d5cfbf; transition: .22s;
+}
+.switch .slider::before {
+  content: ""; position: absolute; width: 17px; height: 17px; border-radius: 50%;
+  left: 3px; top: 3px; background: #fff; transition: .22s;
+  box-shadow: 0 1px 2px rgba(31, 30, 29, .2);
+}
+.switch input:checked + .slider { background: var(--clay); border-color: var(--clay); }
+.switch input:checked + .slider::before { transform: translateX(19px); }
+
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.stat {
+  background: var(--card-soft); border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm); padding: 15px 16px;
+}
+.stat .k { font-size: 11.5px; color: var(--faint); letter-spacing: .05em; line-height: 1.4; }
+.stat .v {
+  font-family: var(--serif); font-size: clamp(26px, 5vw, 34px);
+  font-weight: 700; font-variant-numeric: lining-nums tabular-nums; line-height: 1.25;
+}
+.stat.total .v { color: var(--clay); }
+.stat.active .v { color: var(--sage); }
+
+.mini-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+.mini-table th, .mini-table td { padding: 8px 8px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+.mini-table th { color: var(--faint); font-weight: 600; font-size: 11.5px; letter-spacing: .05em; }
+.mini-table td { color: var(--ink-2); }
+.mini-table tr:last-child td { border-bottom: none; }
+.mono { font-variant-numeric: tabular-nums; }
+
+/* ---------- 卡片墙 ---------- */
+.card-wall { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 700px) { .card-wall { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1080px) { .card-wall { grid-template-columns: repeat(4, 1fr); } }
+
+.pcard {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); overflow: hidden; transition: border-color .2s, box-shadow .2s;
+  display: flex; flex-direction: column;
+}
+.pcard:hover { border-color: #d3ccbc; }
+.pcard-top {
+  padding: 18px 18px 16px; cursor: pointer; text-align: left;
+  background: none; border: none; color: inherit; font-family: inherit;
+  width: 100%; display: flex; flex-direction: column; gap: 5px;
+}
+.pcard-tone { height: 2px; width: 100%; }
+.tone-cap  { background: var(--clay); }
+.tone-cost { background: var(--ochre); }
+.tone-ok   { background: var(--sage); }
+.tone-risk { background: var(--risk); }
+.pcard-title {
+  font-family: var(--serif); font-size: 17px; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.pcard-sub { font-size: 12.5px; color: var(--faint); }
+.pcard-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height .36s ease;
+  padding: 0 18px;
+}
+.pcard.open .pcard-body { max-height: 1100px; }
+.pcard-body-inner { padding-bottom: 20px; }
+.pcard dl { margin: 0; }
+.pcard dt {
+  font-size: 11.5px; color: var(--faint); margin-top: 14px;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.pcard dd { margin: 5px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.68; }
+.param-list { display: grid; gap: 8px; margin: 12px 0 0; }
+.param-list li {
+  font-size: 13px; color: var(--ink-2); line-height: 1.62;
+  list-style: none; padding-left: 14px; position: relative;
+}
+.param-list li::before {
+  content: ""; position: absolute; left: 0; top: 9px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--clay); opacity: .6;
+}
+.param-list li b { color: var(--ink); font-weight: 650; }
+.chev { font-size: 10px; color: var(--faint); transition: transform .25s; }
+
+/* ---------- 推理实验室 ---------- */
+.lab-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+@media (min-width: 900px) { .lab-layout { grid-template-columns: 1fr 1.1fr; align-items: start; } }
+
+.ctrl { margin-bottom: 24px; }
+.ctrl-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.ctrl-head .name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.ctrl-head .val {
+  font-family: var(--serif); font-size: 22px; font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums; color: var(--clay);
+}
+.ctrl-sub { font-size: 12px; color: var(--faint); margin-top: 4px; line-height: 1.6; }
+
+.cand-list { display: grid; gap: 10px; }
+.cand { display: grid; grid-template-columns: 64px 1fr 52px; align-items: center; gap: 12px; transition: opacity .25s; }
+.cand .w { font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cand .track { height: 18px; border-radius: 4px; background: var(--card-soft); overflow: hidden; }
+.cand .bar {
+  height: 100%; width: 0; border-radius: 4px;
+  background: var(--clay);
+  transition: width .3s ease;
+}
+.cand .pct { font-size: 12.5px; color: var(--dim); text-align: right; font-variant-numeric: tabular-nums; }
+.cand.cut { opacity: .38; }
+.cand.cut .bar { background: #cfc8b8; }
+.cand.cut .w { text-decoration: line-through; text-decoration-color: rgba(142, 59, 46, .6); }
+
+.style-readout {
+  margin-top: 20px; padding: 16px 18px; border-radius: var(--r-sm);
+  background: var(--card-soft); border-left: 2px solid var(--line);
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.7;
+}
+.style-readout .tag {
+  display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px;
+  letter-spacing: .04em;
+}
+
+.sample-box { margin-top: 16px; }
+.sample-line {
+  font-family: var(--serif); font-size: 15px; color: var(--ink);
+  padding: 10px 15px; margin-bottom: 9px;
+  background: var(--card-soft); border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm); border-left: 2px solid var(--clay);
+}
+.sample-line .pick { color: var(--clay-deep); font-weight: 700; }
+
+/* ---------- 显存估算 ---------- */
+.vram-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+@media (min-width: 900px) { .vram-layout { grid-template-columns: .85fr 1.15fr; align-items: start; } }
+
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 12.5px; color: var(--dim); margin-bottom: 7px; }
+.field input[type="number"], .field select {
+  width: 100%; font-family: var(--sans); font-size: 15px;
+  padding: 11px 13px; border-radius: var(--r-sm);
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.field input[type="number"]:focus, .field select:focus {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 3px rgba(193, 95, 60, .1);
+}
+.field select { cursor: pointer; }
+
+.result-hero {
+  background: linear-gradient(160deg, var(--clay-wash), var(--card) 70%);
+  border: 1px solid rgba(193, 95, 60, .22);
+  border-radius: var(--r); padding: 22px; margin-bottom: 20px;
+}
+.result-hero .k { font-size: 11.5px; color: var(--clay-deep); letter-spacing: .07em; font-weight: 600; }
+.result-hero .v {
+  font-family: var(--serif);
+  font-size: clamp(38px, 8.5vw, 50px); font-weight: 700; line-height: 1.12;
+  font-variant-numeric: lining-nums tabular-nums; color: var(--ink);
+  letter-spacing: -.02em;
+}
+.result-hero .sub { font-size: 12.5px; color: var(--dim); margin-top: 7px; line-height: 1.6; }
+
+.vram-track {
+  position: relative; height: 26px; border-radius: 6px;
+  background: var(--card-soft); border: 1px solid var(--line-soft);
+  overflow: hidden; margin: 20px 0 8px;
+}
+.vram-fill {
+  height: 100%; width: 0; border-radius: 5px;
+  background: var(--sage); transition: width .45s ease, background .45s ease;
+}
+.vram-mark { position: absolute; top: 0; bottom: 0; width: 1px; background: #d6cfbf; }
+.vram-scale {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums;
+}
+
+.hw-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 18px; }
+@media (min-width: 520px) { .hw-grid { grid-template-columns: repeat(4, 1fr); } }
+.hw-item {
+  background: var(--card-soft); border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm); padding: 12px 8px; text-align: center;
+}
+.hw-item .gb {
+  font-family: var(--serif); font-size: 15px; font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.hw-item .status { font-size: 11px; margin-top: 4px; }
+.hw-ok .gb { color: var(--sage); }
+.hw-ok .status { color: var(--sage); }
+.hw-ok { border-color: rgba(91, 122, 99, .3); background: var(--sage-wash); }
+.hw-over .gb { color: var(--risk); }
+.hw-over .status { color: var(--risk); }
+.hw-over { border-color: rgba(142, 59, 46, .22); background: var(--risk-wash); }
+
+/* ---------- 测验 ---------- */
+.quiz { display: grid; gap: 16px; }
+.qitem {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 22px;
+}
+.qitem .qnum {
+  font-size: 11.5px; color: var(--clay); font-weight: 700; letter-spacing: .1em;
+}
+.qitem .qtext { font-family: var(--serif); font-size: 16.5px; font-weight: 600; margin: 6px 0 16px; }
+.opts { display: grid; gap: 9px; }
+.opt {
+  text-align: left; font-family: var(--sans); font-size: 14px; line-height: 1.6;
+  padding: 11px 15px; border-radius: var(--r-sm); cursor: pointer;
+  background: var(--card); color: var(--ink-2);
+  border: 1px solid var(--line); transition: .16s;
+}
+.opt:hover:not(:disabled) { border-color: #d3ccbc; background: var(--card-soft); }
+.opt:disabled { cursor: default; }
+.opt.right {
+  border-color: var(--sage); background: var(--sage-wash); color: #37503f;
+}
+.opt.wrong {
+  border-color: var(--risk); background: var(--risk-wash); color: #6d2b20;
+}
+.qexplain {
+  display: none; margin-top: 14px; padding: 13px 16px;
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.72;
+  background: var(--card-soft); border-radius: var(--r-sm);
+  border-left: 2px solid var(--clay);
+}
+.qexplain.show { display: block; }
+.qexplain b { color: var(--clay-deep); }
+
+.score-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-top: 22px;
+  padding: 20px 24px; border-radius: var(--r);
+  background: var(--card); border: 1px solid var(--line);
+}
+.score-bar .txt { font-size: 14px; color: var(--dim); }
+.score-bar .score {
+  font-family: var(--serif); font-size: 26px; font-weight: 700;
+  color: var(--clay); font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ---------- 总结 ---------- */
+.summary-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 760px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1080px) { .summary-grid { grid-template-columns: repeat(3, 1fr); } }
+.sum-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 20px;
+}
+.sum-item .idx {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+  display: grid; place-items: center;
+  font-family: var(--serif); font-size: 13px; font-weight: 700; color: #fff;
+  background: var(--clay);
+}
+.sum-item p { font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+.sum-item p b { color: var(--clay-deep); font-weight: 650; }
+
+footer {
+  margin-top: 80px; padding: 30px 0 52px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--faint); line-height: 1.9;
+}
+
+@media (max-width: 600px) {
+  body { font-size: 15.5px; }
+  section { padding-top: 60px; }
+  .card { padding: 20px; }
+  .hero { padding-top: 40px; }
+  .stat-row { gap: 10px; }
+  .stat { padding: 12px 13px; }
+  .mini-table { font-size: 12px; }
+  .mini-table th, .mini-table td { padding: 7px 5px; }
+  .cand { grid-template-columns: 52px 1fr 46px; gap: 9px; }
+  .qitem { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 导航 ================= -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">AI <span>参数</span>手册</a>
+    <nav class="nav-links">
+      <a href="#scale">B 值</a>
+      <a href="#ladder">能力阶梯</a>
+      <a href="#moe">MoE</a>
+      <a href="#cards">四类参数</a>
+      <a href="#lab">旋钮</a>
+      <a href="#vram">显存</a>
+      <a href="#quiz">测验</a>
+      <a href="#summary">总结</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= 1. 首屏 ================= -->
+<section class="hero wrap" id="scale">
+  <p class="eyebrow">交互式学习 · 约 10 分钟</p>
+  <h1>AI 模型参数，<span class="accent">一看就懂</span></h1>
+  <p class="lede">
+    参数就像大脑里神经连接的强度——调得越准，模型"记得"越牢。
+    <strong>B = Billion = 十亿</strong>，7B 就是 70 亿个这样的数值。
+  </p>
+  <p class="hint">
+    严谨补充：参数量统计的是<b>全部权重</b>，其中包含词表（embedding）和输出层这类"查表"权重，
+    所以"连接强度"是帮助理解的类比，不是物理事实。同一个 7B，中文词表大小不同，实际"知识密度"也会有差别。
+  </p>
+
+  <!-- B 值滑杆 -->
+  <div class="card scale-card">
+    <div class="scale-head">
+      <div>
+        <div class="scale-label">拖动滑杆，感受规模跨度</div>
+        <div class="big-number" id="scaleNumber">7B</div>
+      </div>
+      <div><span class="pill pill-cap" id="scaleLevel">主流本地模型</span></div>
+    </div>
+
+    <input type="range" id="scaleSlider" min="0" max="6" step="1" value="2" aria-label="模型规模档位" />
+    <div class="ticks" id="scaleTicks"></div>
+
+    <div class="info-grid">
+      <div class="info-tile">
+        <div class="k">能力类比</div>
+        <div class="v" id="scaleAbility">—</div>
+      </div>
+      <div class="info-tile">
+        <div class="k">硬件门槛</div>
+        <div class="v" id="scaleHardware">—</div>
+      </div>
+      <div class="info-tile">
+        <div class="k">权重体积（FP16 / INT4）</div>
+        <div class="v mono" id="scaleSize">—</div>
+      </div>
+    </div>
+
+    <div class="meter-row">
+      <div class="meter">
+        <span class="m-label">能力上限</span>
+        <div class="m-track"><div class="m-fill fill-cap" id="capFill"></div></div>
+        <span class="m-num" id="capNum">0</span>
+      </div>
+      <div class="meter">
+        <span class="m-label">硬件成本</span>
+        <div class="m-track"><div class="m-fill fill-cost" id="costFill"></div></div>
+        <span class="m-num" id="costNum">0</span>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>注意：</b>"能力上限"是同等训练质量下的粗略刻度，不是线性关系。
+      从 7B 到 13B 的体感提升，通常远小于从 1B 到 7B。
+    </p>
+  </div>
+</section>
+
+<!-- ================= 2. 能力阶梯 ================= -->
+<section class="wrap" id="ladder">
+  <div class="sec-head">
+    <p class="eyebrow">规模 → 能力</p>
+    <h2>B 值能力阶梯</h2>
+    <p>点击任意一级，看同一道题在不同规模下会怎么回答。下面的例子是教学示意，真实输出取决于训练数据与后训练质量。</p>
+  </div>
+
+  <div class="ladder-layout">
+    <div class="ladder" id="ladderList"></div>
+    <div class="ladder-detail" id="ladderDetail"></div>
+  </div>
+</section>
+
+<!-- ================= 3. MoE ================= -->
+<section class="wrap" id="moe">
+  <div class="sec-head">
+    <p class="eyebrow">总参数 vs 激活参数</p>
+    <h2>MoE：大知识库，小计算量</h2>
+    <p>MoE（Mixture of Experts，混合专家）把 FFN 层拆成许多"专家"，每个 Token 只走其中几个。下面 64 个方块就是专家池。</p>
+  </div>
+
+  <div class="moe-layout">
+    <div class="card">
+      <div class="pool" id="expertPool" aria-label="专家池，64 个专家"></div>
+
+      <div class="moe-controls">
+        <button class="btn btn-primary" id="tokenBtn">送入一个 Token</button>
+        <button class="btn" id="resetBtn">重置</button>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch">
+          <input type="checkbox" id="denseToggle" />
+          <span class="slider"></span>
+        </label>
+        <span>切换到传统稠密模型（每次全量计算）</span>
+      </div>
+
+      <p class="note">
+        <b>关键细节：</b>MoE 只把 FFN 层拆成专家，<b>attention 和 embedding 是共享的、永远激活</b>。
+        所以"激活参数" = 共享层 + 被选中的专家，不等于"总参数 × 稀疏度"。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="stat-row">
+        <div class="stat total">
+          <div class="k">总参数（权重存储）</div>
+          <div class="v" id="moeTotal">552B</div>
+        </div>
+        <div class="stat active">
+          <div class="k" id="moeActiveLabel">激活参数（单 Token 计算）</div>
+          <div class="v" id="moeActive">16B</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px;color:var(--ink-2);">
+        知识库按 <b style="color:var(--clay);">552B</b> 的容量存放，但每生成一个字只动用约
+        <b style="color:var(--sage);">16B</b> 的算力。所以它的<b>成本与速度接近 16B 模型，知识面接近 552B 模型</b>。
+      </p>
+
+      <p class="note">
+        <b>上面的数字是演示用示意值</b>，不是真实模型。真实 MoE 的激活比例通常没这么极端，参考：
+      </p>
+
+      <table class="mini-table">
+        <thead>
+          <tr><th>模型</th><th>总参数</th><th>激活参数</th><th>稀疏度</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mixtral 8×7B</td><td class="mono">46.7B</td><td class="mono">12.9B</td><td>约 1/4</td></tr>
+          <tr><td>Qwen3-30B-A3B</td><td class="mono">30.5B</td><td class="mono">3.3B</td><td>约 1/9</td></tr>
+          <tr><td>DeepSeek-V3</td><td class="mono">671B</td><td class="mono">37B</td><td>约 1/18</td></tr>
+          <tr><td>Llama 3.1 405B</td><td class="mono">405B</td><td class="mono">405B</td><td>稠密（无稀疏）</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:14px">
+        <span class="mnemonic">总参数看知识，激活参数看成本</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4. 四类参数卡片墙 ================= -->
+<section class="wrap" id="cards">
+  <div class="sec-head">
+    <p class="eyebrow">参数不是一种东西</p>
+    <h2>四类参数，各管一段</h2>
+    <p>同一个"参数"二字，在架构、训练、推理、部署四个层面指的是完全不同的东西。点击卡片展开。</p>
+  </div>
+  <div class="card-wall" id="cardWall"></div>
+</section>
+
+<!-- ================= 5. 推理旋钮实验室 ================= -->
+<section class="wrap" id="lab">
+  <div class="sec-head">
+    <p class="eyebrow">推理参数</p>
+    <h2>推理旋钮实验室</h2>
+    <p>下面用一组固定的候选词概率模拟"今天的天气真___"的下一个词。温度改变分布的陡峭程度，Top-p 决定切掉多长的尾巴。</p>
+  </div>
+
+  <div class="lab-layout">
+    <div class="card">
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="name">温度 Temperature</span>
+          <span class="val" id="tempVal">0.70</span>
+        </div>
+        <input type="range" id="tempSlider" min="0" max="1.5" step="0.05" value="0.7" aria-label="温度" />
+        <div class="ctrl-sub">0.0 = 永远选最高概率 · 1.0 以上明显发散 · 1.5 多数模型会开始语无伦次</div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="name">Top-p（核采样）</span>
+          <span class="val" id="topPVal">0.90</span>
+        </div>
+        <input type="range" id="topPSlider" min="0.1" max="1" step="0.05" value="0.9" aria-label="Top-p" />
+        <div class="ctrl-sub">按概率从高到低累加，累积到 p 就停，尾巴上的候选直接废弃</div>
+      </div>
+
+      <button class="btn btn-primary" id="sampleBtn">生成 3 次看看</button>
+
+      <p class="note">
+        <b>要分清：</b>温度只改变"怎么选词"，不改变模型"知道什么"。
+        调高温度不会让它更聪明，只会让它更冒险；需要准确答案时应该调低，而不是调高。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="cand-list" id="candList"></div>
+      <div class="style-readout" id="styleReadout"></div>
+      <div class="sample-box" id="sampleBox"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 6. 量化与显存 ================= -->
+<section class="wrap" id="vram">
+  <div class="sec-head">
+    <p class="eyebrow">部署参数</p>
+    <h2>量化与显存估算</h2>
+    <p>参数量决定"装不装得下"。量化就是降低每个参数的存储位数——用一点精度换显存和速度。</p>
+  </div>
+
+  <div class="vram-layout">
+    <div class="card">
+      <div class="field">
+        <label for="totalParams">总参数量（B）</label>
+        <input type="number" id="totalParams" value="7" min="0.1" max="2000" step="0.1" />
+      </div>
+
+      <div class="field">
+        <label for="precision">量化精度</label>
+        <select id="precision">
+          <option value="fp16">FP16 / BF16 — 每参数 2 字节</option>
+          <option value="int8">INT8 — 每参数 1 字节</option>
+          <option value="int4">INT4 — 每参数 0.5 字节</option>
+        </select>
+      </div>
+
+      <div class="switch-row" style="margin-top:0">
+        <label class="switch">
+          <input type="checkbox" id="moeMode" />
+          <span class="slider"></span>
+        </label>
+        <span>这是 MoE 模型</span>
+      </div>
+
+      <div class="field" id="activeField" style="display:none;margin-top:16px">
+        <label for="activeParams">激活参数量（B）</label>
+        <input type="number" id="activeParams" value="16" min="0.1" max="2000" step="0.1" />
+      </div>
+
+      <p class="note">
+        <b>MoE 要点：</b>推理计算量按<b>激活参数</b>算，但权重存储仍然看<b>总参数</b>——
+        专家都要留在显存或内存里，只是每次不全部参与计算。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="result-hero">
+        <div class="k">权重显存占用（粗略）</div>
+        <div class="v" id="vramResult">140 GB</div>
+        <div class="sub" id="vramSub">FP16，70B 稠密模型</div>
+      </div>
+
+      <div class="vram-track">
+        <div class="vram-fill" id="vramFill"></div>
+        <div class="vram-mark" style="left:8%"></div>
+        <div class="vram-mark" style="left:16%"></div>
+        <div class="vram-mark" style="left:24%"></div>
+        <div class="vram-mark" style="left:80%"></div>
+      </div>
+      <div class="vram-scale"><span>0</span><span>50 GB</span><span>100 GB+</span></div>
+
+      <div class="hw-grid" id="hwGrid"></div>
+
+      <p class="note" style="margin-top:18px">
+        <b>粗略估算，仅供参考。</b>实际占用还受这些因素影响：KV Cache（上下文越长越大，
+        长上下文时可能超过权重本身）、框架开销（CUDA context 通常几百 MB）、
+        并行切分带来的额外缓冲，以及 INT4 实际常用 4.5 bit/参数（如 GGUF Q4_K_M）而非精确 4 bit。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7. 小测验 ================= -->
+<section class="wrap" id="quiz">
+  <div class="sec-head">
+    <p class="eyebrow">检验一下</p>
+    <h2>5 道题，看你有没有真的懂</h2>
+    <p>每题选完立刻出解析。全部答完看总分。</p>
+  </div>
+
+  <div class="quiz" id="quizList"></div>
+
+  <div class="score-bar">
+    <span class="txt" id="scoreText">已答 0 / 5 题</span>
+    <span class="score" id="scoreValue">—</span>
+  </div>
+</section>
+
+<!-- ================= 8. 总结 ================= -->
+<section class="wrap" id="summary">
+  <div class="sec-head">
+    <p class="eyebrow">收尾</p>
+    <h2>六句话带走</h2>
+  </div>
+
+  <div class="summary-grid">
+    <div class="sum-item"><div class="idx">1</div><p>B 是十亿参数。<b>7B = 70 亿</b>，它是模型容量的刻度，不是速度的刻度。</p></div>
+    <div class="sum-item"><div class="idx">2</div><p>参数是容量，不是唯一标准。<b>数据质量、后训练、任务匹配</b>都会改变实际表现。</p></div>
+    <div class="sum-item"><div class="idx">3</div><p>看总参数，也看激活参数。<b>总参数定知识面，激活参数定成本和速度。</b></p></div>
+    <div class="sum-item"><div class="idx">4</div><p>架构、训练、推理、部署四类参数<b>各管一段</b>，混为一谈就会得出错误结论。</p></div>
+    <div class="sum-item"><div class="idx">5</div><p>温度与 Top-p 是<b>创作旋钮</b>，调的是随机性，不是智力。</p></div>
+    <div class="sum-item"><div class="idx">6</div><p>量化决定<b>能不能跑</b>，上下文窗口决定<b>能记多长</b>。</p></div>
+  </div>
+
+  <p class="note" style="margin-top:22px">
+    本页所有数值为教学示意与量级估算，不同厂商、不同代际的模型差异很大。
+    真正的判断依据永远是：在你的任务上实测。
+  </p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    AI 模型参数交互学习页 · 单文件离线版，无外部依赖。<br />
+    估算公式：显存 ≈ 参数量 × 每参数字节数；计算量 ≈ 2 × 激活参数量 × Token 数（前向）。
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/* ============================================================
+   主题色常量：与 CSS 变量保持一致，供脚本动态着色使用
+   ============================================================ */
+const THEME = {
+  clay: "#c15f3c",        // 能力 / 主强调
+  clayDeep: "#a34b2c",
+  clayLight: "#d98a6d",
+  sage: "#5b7a63",        // 效率 / 正面
+  sageLight: "#8aa891",
+  ochre: "#98793d",       // 成本 / 风险提示
+  ochreLight: "#c0a469",
+  risk: "#8e3b2e",        // 高风险
+  riskLight: "#b0685a",
+  track: "#e4dfd2"        // 滑杆未填充轨道
+};
+
+/* ============================================================
+   1. B 值滑杆
+   ============================================================ */
+
+/** 七个规模档位的描述数据 */
+const SCALE_STEPS = [
+  {
+    b: 0.5, label: "0.5B", level: "端侧微型",
+    ability: "分词、纠错、简单分类；几乎不做多步推理",
+    hardware: "手机 NPU / 树莓派可跑，INT4 约 0.3 GB",
+    cap: 10, cost: 6
+  },
+  {
+    b: 1, label: "1B", level: "入门小模型",
+    ability: "能套模板回答，写短句、做关键词抽取",
+    hardware: "手机 / 核显可跑，INT4 约 0.6 GB",
+    cap: 20, cost: 12
+  },
+  {
+    b: 7, label: "7B", level: "主流本地模型",
+    ability: "日常问答、总结、写作、简单代码；多步推理仍会掉链子",
+    hardware: "单张 8–12 GB 显卡，INT4 约 4 GB",
+    cap: 45, cost: 30
+  },
+  {
+    b: 13, label: "13B", level: "进阶本地模型",
+    ability: "结构化输出更稳，代码补全、长文改写",
+    hardware: "16–24 GB 显卡，INT4 约 7 GB",
+    cap: 55, cost: 40
+  },
+  {
+    b: 70, label: "70B", level: "大型稠密模型",
+    ability: "系统性推理、多步代码、复杂文档分析",
+    hardware: "多卡或单卡 48 GB+，INT4 约 40 GB",
+    cap: 74, cost: 72
+  },
+  {
+    b: 175, label: "175B", level: "上一代天花板",
+    ability: "GPT-3 量级，通用能力强但推理成本极高",
+    hardware: "多卡集群，FP16 约 350 GB 权重",
+    cap: 86, cost: 90
+  },
+  {
+    b: 500, label: "500B+", level: "前沿模型规模",
+    ability: "几乎不以此规模稠密部署，通常走 MoE 稀疏化",
+    hardware: "数据中心级，FP16 约 1 TB 权重",
+    cap: 95, cost: 100
+  }
+];
+
+const scaleSlider = document.getElementById("scaleSlider");
+const scaleNumber = document.getElementById("scaleNumber");
+const scaleLevel  = document.getElementById("scaleLevel");
+const scaleAbility = document.getElementById("scaleAbility");
+const scaleHardware = document.getElementById("scaleHardware");
+const scaleSize = document.getElementById("scaleSize");
+const capFill = document.getElementById("capFill");
+const costFill = document.getElementById("costFill");
+const capNum = document.getElementById("capNum");
+const costNum = document.getElementById("costNum");
+const scaleTicks = document.getElementById("scaleTicks");
+
+/** 把滑杆填充到当前档位（浏览器默认不显示已滑过的部分） */
+function paintRange(el, ratio, colorA, colorB) {
+  const pct = Math.max(0, Math.min(1, ratio)) * 100;
+  el.style.background =
+    "linear-gradient(90deg, " + colorA + " 0%, " + colorB + " " + pct + "%, " +
+    THEME.track + " " + pct + "%, " + THEME.track + " 100%)";
+}
+
+/** 字节数转成人类可读的 GB（按 10^9，与厂商标称一致） */
+function formatGigabytes(bytes) {
+  const gb = bytes / 1e9;
+  if (gb >= 1000) return (gb / 1000).toFixed(1) + " TB";
+  if (gb >= 10) return gb.toFixed(0) + " GB";
+  return gb.toFixed(1) + " GB";
+}
+
+function renderScale(index) {
+  const step = SCALE_STEPS[index];
+
+  scaleNumber.textContent = step.label;
+  scaleLevel.textContent = step.level;
+  scaleAbility.textContent = step.ability;
+  scaleHardware.textContent = step.hardware;
+
+  const params = step.b * 1e9;
+  scaleSize.textContent = formatGigabytes(params * 2) + " / " + formatGigabytes(params * 0.5);
+
+  capFill.style.width = step.cap + "%";
+  costFill.style.width = step.cost + "%";
+  capNum.textContent = step.cap;
+  costNum.textContent = step.cost;
+
+  const ratio = index / (SCALE_STEPS.length - 1);
+  paintRange(scaleSlider, ratio, THEME.clayLight, THEME.clay);
+}
+
+// 生成刻度标签
+scaleTicks.innerHTML = SCALE_STEPS.map(function (s) {
+  return "<span>" + s.label + "</span>";
+}).join("");
+
+scaleSlider.addEventListener("input", function () {
+  renderScale(Number(scaleSlider.value));
+});
+renderScale(Number(scaleSlider.value));
+
+
+/* ============================================================
+   2. 能力阶梯
+   ============================================================ */
+
+const LADDER_STEPS = [
+  {
+    range: "< 1B",
+    title: "小学生水平",
+    width: "28%",
+    ability: "能听懂指令、做简单分类和改写，但不会多步推理，容易一本正经地编。",
+    question: "为什么天空是蓝色？",
+    answer: "因为天空就是蓝色的呀。",
+    note: "典型场景：输入法候选、嵌入式意图分类、简单的文本清洗。"
+  },
+  {
+    range: "7B – 13B",
+    title: "成人读写",
+    width: "52%",
+    ability: "可以读长文、做摘要、写邮件和代码，日常任务基本够用；复杂的多步推理仍会掉链子。",
+    question: "为什么天空是蓝色？",
+    answer: "阳光进入大气后，波长较短的<em>蓝光</em>更容易被空气分子散射，所以抬头看到的多是蓝光。",
+    note: "典型场景：本地部署的 7B / 8B 模型，做个人助理和轻量代码补全。"
+  },
+  {
+    range: "30B – 70B",
+    title: "高年级研究生",
+    width: "78%",
+    ability: "能拆解复杂问题、写多文件代码、做长链条推理，回答更有结构，也会自我检查。",
+    question: "为什么天空是蓝色？",
+    answer: "这是<em>瑞利散射</em>：散射强度与波长四次方成反比。蓝光约 450 nm、红光约 700 nm，短波散射强得多，所以天空偏蓝；日落时阳光穿过更厚大气，蓝光被散尽，只剩红橙。",
+    note: "典型场景：70B 稠密模型、30B 级 MoE，可做复杂代码重构和技术文档分析。"
+  },
+  {
+    range: "100B+",
+    title: "通用智能雏形",
+    width: "100%",
+    ability: "在没专门训练过的任务上也能给出可用答案，跨领域迁移明显；但幻觉仍在，成本高，多用于云端服务。",
+    question: "为什么天空是蓝色？",
+    answer: "先给瑞利散射（∝ 1/λ⁴），再补一句：<em>实际观感还受气溶胶、水汽和海拔影响</em>，并追问你是想要物理解释还是摄影上的白平衡建议。",
+    note: "典型场景：前沿云端模型，作为通用 Agent 的底座。"
+  }
+];
+
+const ladderList = document.getElementById("ladderList");
+const ladderDetail = document.getElementById("ladderDetail");
+
+ladderList.innerHTML = LADDER_STEPS.map(function (s, i) {
+  return (
+    '<button class="step" data-index="' + i + '" type="button">' +
+      '<span class="bar" style="width:' + s.width + '"></span>' +
+      '<span class="txt">' +
+        '<span class="range">' + s.range + '</span><br />' +
+        '<span class="title">' + s.title + '</span>' +
+      '</span>' +
+    '</button>'
+  );
+}).join("");
+
+function renderLadderDetail(index) {
+  const s = LADDER_STEPS[index];
+  ladderDetail.innerHTML =
+    '<div class="detail-title">' + s.range + ' · ' + s.title + '</div>' +
+    '<div class="detail-ability">' + s.ability + '</div>' +
+    '<div class="example-box">' +
+      '<div class="q">问：' + s.question + '</div>' +
+      '<div class="a">' + s.answer + '</div>' +
+    '</div>' +
+    '<div class="detail-note">' + s.note + '</div>';
+}
+
+ladderList.addEventListener("click", function (event) {
+  const btn = event.target.closest(".step");
+  if (!btn) return;
+  const index = Number(btn.dataset.index);
+  ladderList.querySelectorAll(".step").forEach(function (el) {
+    el.classList.toggle("is-active", el === btn);
+  });
+  renderLadderDetail(index);
+});
+
+// 默认选中第二级
+ladderList.querySelectorAll(".step")[1].classList.add("is-active");
+renderLadderDetail(1);
+
+
+/* ============================================================
+   3. MoE 专家池
+   ============================================================ */
+
+const EXPERT_COUNT = 64;   // 专家总数
+const ACTIVE_COUNT = 8;    // 每个 Token 激活的专家数
+
+const expertPool = document.getElementById("expertPool");
+const tokenBtn = document.getElementById("tokenBtn");
+const resetBtn = document.getElementById("resetBtn");
+const denseToggle = document.getElementById("denseToggle");
+const moeTotalEl = document.getElementById("moeTotal");
+const moeActiveEl = document.getElementById("moeActive");
+const moeActiveLabel = document.getElementById("moeActiveLabel");
+
+// 生成专家方块
+const expertEls = [];
+for (let i = 0; i < EXPERT_COUNT; i++) {
+  const div = document.createElement("div");
+  div.className = "expert";
+  expertPool.appendChild(div);
+  expertEls.push(div);
+}
+
+/** 从 0..n-1 里随机取 k 个不重复的下标 */
+function pickRandomIndices(n, k) {
+  const pool = [];
+  for (let i = 0; i < n; i++) pool.push(i);
+  // Fisher-Yates 部分洗牌
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+  }
+  return pool.slice(0, k);
+}
+
+/** 根据激活集合渲染专家池；isDense 为 true 时全部点亮并用警示色 */
+function renderExperts(activeSet, isDense) {
+  expertEls.forEach(function (el, i) {
+    const on = activeSet.has(i);
+    el.classList.toggle("active", on);
+    el.classList.toggle("dense", on && isDense);
+  });
+}
+
+function updateMoeNumbers(isDense) {
+  if (isDense) {
+    moeTotalEl.textContent = "552B";
+    moeActiveEl.textContent = "552B";
+    moeActiveLabel.textContent = "每次全量计算（稠密）";
+  } else {
+    moeTotalEl.textContent = "552B";
+    moeActiveEl.textContent = "16B";
+    moeActiveLabel.textContent = "激活参数（单 Token 计算）";
+  }
+}
+
+// 初始状态：点亮第一组，方便一进入页面就看到效果
+let currentActive = new Set(pickRandomIndices(EXPERT_COUNT, ACTIVE_COUNT));
+renderExperts(currentActive, false);
+updateMoeNumbers(false);
+
+tokenBtn.addEventListener("click", function () {
+  if (denseToggle.checked) {
+    // 稠密模式下重新点按钮，只提示全量计算
+    return;
+  }
+  currentActive = new Set(pickRandomIndices(EXPERT_COUNT, ACTIVE_COUNT));
+  renderExperts(currentActive, false);
+});
+
+resetBtn.addEventListener("click", function () {
+  denseToggle.checked = false;
+  currentActive = new Set();
+  renderExperts(currentActive, false);
+  updateMoeNumbers(false);
+});
+
+denseToggle.addEventListener("change", function () {
+  const isDense = denseToggle.checked;
+  if (isDense) {
+    currentActive = new Set();
+    for (let i = 0; i < EXPERT_COUNT; i++) currentActive.add(i);
+  } else {
+    currentActive = new Set(pickRandomIndices(EXPERT_COUNT, ACTIVE_COUNT));
+  }
+  renderExperts(currentActive, isDense);
+  updateMoeNumbers(isDense);
+});
+
+
+/* ============================================================
+   4. 四类参数卡片墙
+   ============================================================ */
+
+const PARAM_CARDS = [
+  {
+    tone: "cap",
+    title: "架构参数",
+    subtitle: "模型的骨架怎么搭",
+    mnemonic: "骨架定天赋",
+    what: "决定模型长什么样的结构参数，训练前就固定下来，之后不能改。",
+    items: [
+      { name: "层数 (layers)", desc: "堆多少层 Transformer，越深越能做抽象推理" },
+      { name: "隐藏维度 (hidden size)", desc: "每层内部向量的宽度，宽度决定单层容量" },
+      { name: "注意力头数 (heads)", desc: "并行关注多少种关系；GQA/MQA 可减少 KV Cache" },
+      { name: "词表大小 (vocab)", desc: "认识多少个 token；中文词表小会导致一个汉字被切成多个 token，浪费上下文" },
+      { name: "专家数 / 激活专家数", desc: "MoE 的核心：池子多大，每个 Token 用几个" }
+    ],
+    effect: "架构决定模型的能力上限和推理成本结构。同样的参数量，深而窄和浅而宽的表现可能差别很大。",
+    keep: "架构是出生设定，训练改不了。"
+  },
+  {
+    tone: "ok",
+    title: "训练参数",
+    subtitle: "怎么把知识灌进去",
+    mnemonic: "数据质量 > 数据数量",
+    what: "训练过程中控制「学什么、学多快」的超参数。",
+    items: [
+      { name: "数据量 (tokens)", desc: "总共看了多少字。Chinchilla 给出约 20 tokens/参数的经验比例" },
+      { name: "数据配比", desc: "代码、中文、英文、数学各占多少，直接决定模型偏科与否" },
+      { name: "学习率 (LR)", desc: "每次更新的步长，太大训崩，太小学不动" },
+      { name: "批大小 (batch size)", desc: "一次看多少条样本，影响训练稳定性和显存" }
+    ],
+    effect: "训练参数决定「同样的骨架能练出多少本事」。数据配比往往比总数据量更影响实际体验。",
+    keep: "Chinchilla 1:20 是 2022 年的算力最优解；现在推理成本占主导，主流模型普遍「过度训练」——Llama 3 8B 用了 15T tokens，约 1875 tokens/参数。"
+  },
+  {
+    tone: "cost",
+    title: "推理参数",
+    subtitle: "每次生成时怎么选词",
+    mnemonic: "调随机性，不调智力",
+    what: "不改模型权重，只在生成时影响采样策略的运行时参数。",
+    items: [
+      { name: "温度 (temperature)", desc: "缩放 logits。低=稳定可复现，高=多样但易跑偏" },
+      { name: "Top-p (核采样)", desc: "按累积概率截断候选集，切掉长尾" },
+      { name: "Top-k", desc: "只保留概率最高的 k 个候选，比 Top-p 更粗暴" },
+      { name: "重复 / 频率 / 存在惩罚", desc: "压掉已出现过的词，缓解复读；调太高会让表达变僵硬" }
+    ],
+    effect: "同一个模型，换一组推理参数就像换了性格。做抽取和代码时调低温度，做头脑风暴时调高。",
+    keep: "温度改的是分布形状，不是知识储备。"
+  },
+  {
+    tone: "risk",
+    title: "部署参数",
+    subtitle: "能不能在你的机器上跑起来",
+    mnemonic: "先算显存，再谈效果",
+    what: "决定模型能否落地到具体硬件的工程参数。",
+    items: [
+      { name: "上下文窗口", desc: "一次能看多少 token。越长 KV Cache 越大，且存在「中间遗失」现象" },
+      { name: "量化精度", desc: "FP16 / INT8 / INT4，每参数 2 / 1 / 0.5 字节" },
+      { name: "激活参数", desc: "MoE 每 Token 实际参与计算的参数量，决定速度" },
+      { name: "显存估算", desc: "权重 + KV Cache + 框架开销，三者相加才是真实需求" }
+    ],
+    effect: "部署参数决定「跑不跑得动」。很多人以为 70B 装不下，其实是没算量化后的体积。",
+    keep: "上下文占显存，量化换空间。"
+  }
+];
+
+const cardWall = document.getElementById("cardWall");
+
+cardWall.innerHTML = PARAM_CARDS.map(function (card, index) {
+  const itemsHtml = card.items.map(function (item) {
+    return "<li><b>" + item.name + "</b>：" + item.desc + "</li>";
+  }).join("");
+
+  return (
+    '<div class="pcard" data-index="' + index + '">' +
+      '<div class="pcard-tone tone-' + card.tone + '"></div>' +
+      '<button class="pcard-top" type="button">' +
+        '<span class="pcard-title">' + card.title + ' <span class="chev">▼</span></span>' +
+        '<span class="pcard-sub">' + card.subtitle + '</span>' +
+      '</button>' +
+      '<div class="pcard-body"><div class="pcard-body-inner">' +
+        '<dl>' +
+          '<dt>是什么</dt><dd>' + card.what + '</dd>' +
+        '</dl>' +
+        '<ul class="param-list">' + itemsHtml + '</ul>' +
+        '<dl>' +
+          '<dt>影响什么</dt><dd>' + card.effect + '</dd>' +
+          '<dt>记忆点</dt><dd>' + card.keep + '</dd>' +
+        '</dl>' +
+        '<div style="margin-top:14px"><span class="mnemonic">' + card.mnemonic + '</span></div>' +
+      '</div></div>' +
+    '</div>'
+  );
+}).join("");
+
+cardWall.addEventListener("click", function (event) {
+  const top = event.target.closest(".pcard-top");
+  if (!top) return;
+  top.closest(".pcard").classList.toggle("open");
+});
+
+
+/* ============================================================
+   5. 推理旋钮实验室
+   ============================================================ */
+
+/** 固定的候选词 logits（未归一化分数），模拟"今天的天气真___" */
+const CANDIDATES = [
+  { word: "好",   logit: 4.2 },
+  { word: "不错", logit: 3.7 },
+  { word: "晴朗", logit: 3.0 },
+  { word: "舒服", logit: 2.3 },
+  { word: "一般", logit: 1.2 },
+  { word: "糟糕", logit: 0.4 },
+  { word: "诡异", logit: -0.9 },
+  { word: "蘑菇", logit: -2.6 }
+];
+
+const tempSlider = document.getElementById("tempSlider");
+const topPSlider = document.getElementById("topPSlider");
+const tempVal = document.getElementById("tempVal");
+const topPVal = document.getElementById("topPVal");
+const candList = document.getElementById("candList");
+const styleReadout = document.getElementById("styleReadout");
+const sampleBox = document.getElementById("sampleBox");
+const sampleBtn = document.getElementById("sampleBtn");
+
+// 生成候选词行
+candList.innerHTML = CANDIDATES.map(function (c, i) {
+  return (
+    '<div class="cand" data-index="' + i + '">' +
+      '<span class="w">' + c.word + '</span>' +
+      '<div class="track"><div class="bar"></div></div>' +
+      '<span class="pct">—</span>' +
+    '</div>'
+  );
+}).join("");
+
+const candEls = Array.prototype.slice.call(candList.querySelectorAll(".cand"));
+
+/** softmax(logits / T)，T 过小时夹紧避免除零 */
+function softmaxWithTemperature(logits, temperature) {
+  const t = Math.max(temperature, 0.02);
+  const maxLogit = Math.max.apply(null, logits);
+  const exps = logits.map(function (l) { return Math.exp((l - maxLogit) / t); });
+  const sum = exps.reduce(function (a, b) { return a + b; }, 0);
+  return exps.map(function (e) { return e / sum; });
+}
+
+/** 按 Top-p 截断：从高到低累加概率，累积到 p 即停止 */
+function applyTopP(probs, topP) {
+  const indexed = probs.map(function (p, i) { return { p: p, i: i }; })
+                      .sort(function (a, b) { return b.p - a.p; });
+  const kept = new Set();
+  let cumulative = 0;
+  for (let k = 0; k < indexed.length; k++) {
+    cumulative += indexed[k].p;
+    kept.add(indexed[k].i);
+    if (cumulative >= topP) break;
+  }
+  return probs.map(function (p, i) { return kept.has(i) ? p : 0; });
+}
+
+/** 归一化（截断后重新分配到 1） */
+function normalize(probs) {
+  const sum = probs.reduce(function (a, b) { return a + b; }, 0);
+  if (sum <= 0) return probs.map(function () { return 0; });
+  return probs.map(function (p) { return p / sum; });
+}
+
+/** 从概率分布中采样一个下标 */
+function sampleOnce(probs) {
+  const r = Math.random();
+  let acc = 0;
+  for (let i = 0; i < probs.length; i++) {
+    acc += probs[i];
+    if (r <= acc) return i;
+  }
+  return probs.length - 1;
+}
+
+/** 根据温度与 Top-p 生成一句风格描述 */
+function describeStyle(temperature, topP) {
+  let tag, tagColor, text;
+
+  if (temperature <= 0.05) {
+    tag = "确定性"; tagColor = THEME.sage;
+    text = "温度接近 0 时退化为贪心解码：永远选概率最高的词，同样的输入永远同一个输出。适合抽取、分类、代码补全。";
+  } else if (temperature < 0.45) {
+    tag = "克制"; tagColor = THEME.sage;
+    text = "分布很陡，高概率词占绝对优势。输出稳定、可复现，适合事实问答和结构化输出。";
+  } else if (temperature < 0.85) {
+    tag = "日常"; tagColor = THEME.clay;
+    text = "日常对话与写作的常用区间。既有一定变化，又不会离题。";
+  } else if (temperature < 1.15) {
+    tag = "发散"; tagColor = THEME.ochre;
+    text = "分布明显被压平，中等概率词开始有机会。适合头脑风暴、创意写作，但准确性会下降。";
+  } else {
+    tag = "高风险"; tagColor = THEME.risk;
+    text = "分布接近均匀，低概率词也频繁出现。多数模型在这个区间会开始语病、跑题甚至幻觉。";
+  }
+
+  if (topP <= 0.35) {
+    text += " Top-p 很低，候选集被砍到只剩最可能的几个词，即便高温也翻不出花样。";
+  } else if (topP < 0.85) {
+    text += " Top-p 中等，长尾候选已被裁掉。";
+  } else {
+    text += " Top-p 接近 1，长尾候选基本都保留。";
+  }
+
+  return { tag: tag, color: tagColor, text: text };
+}
+
+/** 主渲染函数 */
+function renderLab() {
+  const temperature = Number(tempSlider.value);
+  const topP = Number(topPSlider.value);
+
+  tempVal.textContent = temperature.toFixed(2);
+  topPVal.textContent = topP.toFixed(2);
+
+  paintRange(tempSlider, temperature / 1.5, THEME.ochreLight, THEME.ochre);
+  paintRange(topPSlider, (topP - 0.1) / 0.9, THEME.clayLight, THEME.clay);
+
+  const logits = CANDIDATES.map(function (c) { return c.logit; });
+  const rawProbs = softmaxWithTemperature(logits, temperature);
+  const cutProbs = applyTopP(rawProbs, topP);
+  const finalProbs = normalize(cutProbs);
+
+  // 更新每一行
+  candEls.forEach(function (el, i) {
+    const p = finalProbs[i];
+    const isCut = cutProbs[i] === 0 && rawProbs[i] > 0;
+    const barEl = el.querySelector(".bar");
+    const pctEl = el.querySelector(".pct");
+
+    el.classList.toggle("cut", isCut);
+    // 用占最大值的比例来定条宽，视觉上更有层次
+    barEl.style.width = Math.min(100, p * 100) + "%";
+    pctEl.textContent = isCut ? "截断" : (p * 100).toFixed(1) + "%";
+  });
+
+  const style = describeStyle(temperature, topP);
+  styleReadout.innerHTML =
+    '<span class="tag" style="color:' + style.color + '">生成风格：' + style.tag + '</span>' +
+    style.text;
+
+  return finalProbs;
+}
+
+/** 生成一次并返回被选中的词 */
+function generateSentence(probs) {
+  const index = sampleOnce(probs);
+  return "今天的天气真" + CANDIDATES[index].word + "。";
+}
+
+sampleBtn.addEventListener("click", function () {
+  const probs = renderLab();
+  const lines = [];
+  for (let i = 0; i < 3; i++) {
+    lines.push(generateSentence(probs));
+  }
+  sampleBox.innerHTML = lines.map(function (line) {
+    // 高亮被选中的候选词
+    let highlighted = line;
+    CANDIDATES.forEach(function (c) {
+      highlighted = highlighted.replace("真" + c.word, '真<span class="pick">' + c.word + "</span>");
+    });
+    return '<div class="sample-line">' + highlighted + '</div>';
+  }).join("");
+});
+
+tempSlider.addEventListener("input", renderLab);
+topPSlider.addEventListener("input", renderLab);
+renderLab();
+
+
+/* ============================================================
+   6. 量化与显存估算
+   ============================================================ */
+
+/** 每种量化精度对应的每参数字节数 */
+const BYTES_PER_PARAM = { fp16: 2, int8: 1, int4: 0.5 };
+
+/** 常见显卡显存档位（GB） */
+const HARDWARE_TIERS = [8, 16, 24, 80];
+
+const totalParamsInput = document.getElementById("totalParams");
+const activeParamsInput = document.getElementById("activeParams");
+const precisionSelect = document.getElementById("precision");
+const moeModeToggle = document.getElementById("moeMode");
+const activeField = document.getElementById("activeField");
+const vramResult = document.getElementById("vramResult");
+const vramSub = document.getElementById("vramSub");
+const vramFill = document.getElementById("vramFill");
+const hwGrid = document.getElementById("hwGrid");
+
+function updateVramEstimate() {
+  const totalB = Math.max(0.1, Number(totalParamsInput.value) || 0);
+  const activeB = Math.max(0.1, Number(activeParamsInput.value) || 0);
+  const bytesPerParam = BYTES_PER_PARAM[precisionSelect.value];
+  const isMoe = moeModeToggle.checked;
+
+  // 权重占用：始终按总参数算（专家都要存着）
+  const weightGb = totalB * 1e9 * bytesPerParam / 1e9;
+
+  let displayText, subText;
+  if (weightGb >= 1000) {
+    displayText = (weightGb / 1000).toFixed(2) + " TB";
+  } else {
+    displayText = weightGb.toFixed(1) + " GB";
+  }
+
+  const precisionLabel = precisionSelect.value.toUpperCase();
+  if (isMoe) {
+    subText = precisionLabel + " · 总参数 " + totalB + "B，激活 " + activeB +
+              "B（计算按激活，存储按总参）";
+  } else {
+    subText = precisionLabel + " · " + totalB + "B 稠密模型，全部参数参与计算";
+  }
+
+  vramResult.textContent = displayText;
+  vramSub.textContent = subText;
+
+  // 进度条：量程 0–100 GB，超过则拉满
+  const fillPct = Math.min(100, weightGb);
+  vramFill.style.width = fillPct + "%";
+
+  // 颜色随占用变化：sage（宽裕）→ ochre（吃紧）→ risk（放不下）
+  if (weightGb <= 16) {
+    vramFill.style.background = THEME.sage;
+  } else if (weightGb <= 48) {
+    vramFill.style.background = THEME.ochre;
+  } else {
+    vramFill.style.background = THEME.risk;
+  }
+
+  // 硬件门槛判断
+  hwGrid.innerHTML = HARDWARE_TIERS.map(function (gb) {
+    const fits = weightGb <= gb;
+    const cls = fits ? "hw-ok" : "hw-over";
+    const status = fits ? "可装下" : "放不下";
+    return (
+      '<div class="hw-item ' + cls + '">' +
+        '<div class="gb">' + gb + ' GB</div>' +
+        '<div class="status">' + status + '</div>' +
+      '</div>'
+    );
+  }).join("");
+}
+
+totalParamsInput.addEventListener("input", updateVramEstimate);
+activeParamsInput.addEventListener("input", updateVramEstimate);
+precisionSelect.addEventListener("change", updateVramEstimate);
+moeModeToggle.addEventListener("change", function () {
+  activeField.style.display = moeModeToggle.checked ? "block" : "none";
+  updateVramEstimate();
+});
+
+updateVramEstimate();
+
+
+/* ============================================================
+   7. 小测验
+   ============================================================ */
+
+const QUIZ_DATA = [
+  {
+    question: "「7B」是什么意思？",
+    options: [
+      "模型有 7 个专家",
+      "模型有约 70 亿个参数",
+      "模型支持 7 种编程语言",
+      "模型训练用了 7B 条数据"
+    ],
+    answer: 1,
+    explain: "B = Billion = 十亿。7B 即约 70 亿个参数，统计的是全部权重（含词表和输出层），不是专家数，也不是数据量。"
+  },
+  {
+    question: "「30B-A3B」里的 A3B 指什么？",
+    options: [
+      "有 3B 个专家",
+      "每个 Token 实际参与计算约 3B 参数",
+      "训练用了 3B tokens",
+      "支持 3B 长度的上下文"
+    ],
+    answer: 1,
+    explain: "A = Active，指激活参数。总参数 30B，但每个 Token 只走其中约 3B。这正是 MoE 的关键：知识存得多，每次算得少。"
+  },
+  {
+    question: "把温度调高，通常会带来什么？",
+    options: [
+      "模型知识变多，回答更准确",
+      "输出更随机多样，但不保证更正确",
+      "推理速度变快",
+      "上下文窗口变大"
+    ],
+    answer: 1,
+    explain: "温度只改变采样分布的陡峭程度，不改变模型学到的知识。调高等于让它更冒险，T 超过 1.2 后多数模型会开始语病和幻觉。"
+  },
+  {
+    question: "INT4 量化的主要好处是什么？",
+    options: [
+      "让模型参数量变多",
+      "把权重显存降到 FP16 的约 1/4，能装进更小的显卡",
+      "提升模型的推理准确率",
+      "扩大上下文窗口"
+    ],
+    answer: 1,
+    explain: "FP16 每参数 2 字节，INT4 约 0.5 字节，权重体积降到约 1/4。代价是精度损失，通常需要量化校准来弥补。"
+  },
+  {
+    question: "参数越多，模型就一定越好吗？",
+    options: [
+      "是，参数是唯一决定因素",
+      "不一定，还取决于数据质量、后训练水平和任务匹配度",
+      "不一定，但参数多的模型推理一定更快",
+      "参数越多，上下文窗口越大"
+    ],
+    answer: 1,
+    explain: "参数量只是容量上限。数据质量、数据配比、后训练（SFT/RLHF）以及模型与任务的匹配度都会显著改变实际表现。而且参数越多，推理成本越高——很多时候小模型在特定任务上更划算。"
+  }
+];
+
+const quizList = document.getElementById("quizList");
+const scoreText = document.getElementById("scoreText");
+const scoreValue = document.getElementById("scoreValue");
+
+let answeredCount = 0;
+let correctCount = 0;
+
+quizList.innerHTML = QUIZ_DATA.map(function (q, qi) {
+  const optsHtml = q.options.map(function (opt, oi) {
+    return '<button class="opt" type="button" data-q="' + qi + '" data-o="' + oi + '">' +
+             opt +
+           '</button>';
+  }).join("");
+
+  return (
+    '<div class="qitem">' +
+      '<div class="qnum">第 ' + (qi + 1) + ' 题</div>' +
+      '<div class="qtext">' + q.question + '</div>' +
+      '<div class="opts">' + optsHtml + '</div>' +
+      '<div class="qexplain" id="explain-' + qi + '"></div>' +
+    '</div>'
+  );
+}).join("");
+
+quizList.addEventListener("click", function (event) {
+  const btn = event.target.closest(".opt");
+  if (!btn || btn.disabled) return;
+
+  const qi = Number(btn.dataset.q);
+  const oi = Number(btn.dataset.o);
+  const question = QUIZ_DATA[qi];
+  const isCorrect = oi === question.answer;
+
+  // 锁定该题所有选项
+  const item = btn.closest(".qitem");
+  item.querySelectorAll(".opt").forEach(function (el) {
+    el.disabled = true;
+    if (Number(el.dataset.o) === question.answer) el.classList.add("right");
+  });
+  if (!isCorrect) btn.classList.add("wrong");
+
+  // 显示解析
+  const explainEl = document.getElementById("explain-" + qi);
+  explainEl.innerHTML = "<b>" + (isCorrect ? "答对了。" : "正确答案见高亮项。") + "</b> " + question.explain;
+  explainEl.classList.add("show");
+
+  answeredCount += 1;
+  if (isCorrect) correctCount += 1;
+
+  scoreText.textContent = "已答 " + answeredCount + " / " + QUIZ_DATA.length + " 题";
+  if (answeredCount === QUIZ_DATA.length) {
+    scoreValue.textContent = correctCount + " / " + QUIZ_DATA.length;
+    if (correctCount === QUIZ_DATA.length) {
+      scoreText.textContent = "全对。你已经能分清总参数、激活参数和推理参数了。";
+    } else if (correctCount >= 3) {
+      scoreText.textContent = "答完 " + QUIZ_DATA.length + " 题，基本概念已经立住了，回看错题那一段即可。";
+    } else {
+      scoreText.textContent = "答完 " + QUIZ_DATA.length + " 题，建议重看 MoE 和显存两节。";
+    }
+  } else {
+    scoreValue.textContent = correctCount + " / " + answeredCount;
+  }
+});
+
+</script>
+
+<script>
+/* 注册 Service Worker：仅在 http(s) 下尝试，本地双击打开时静默跳过 */
+(function () {
+  if (!("serviceWorker" in navigator)) return;
+  if (!location.protocol.startsWith("http")) return;
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function () {
+      /* 注册失败不影响页面正常使用 */
+    });
+  });
+})();
+</script>
+</body>
+</html>
