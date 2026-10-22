@@ -295,6 +295,10 @@ def clean_inline(text: str) -> str:
     for pattern, replacement in CUSTOM_MACROS:
         text = re.sub(pattern, replacement, text)
 
+    # 转义字符还原：正文里的 \& \% \$ \# \_ 是字面符号，
+    # 不还原会留下反斜杠，而且 \& 会让残渣检测误判（Food\&drink）
+    text = re.sub(r"\\([&%$#_])", r"\1", text)
+
     # 引用与交叉引用：保留标记，便于后续统计悬空引用
     text = re.sub(r"\\cite[a-zA-Z]*\{([^}]*)\}", r"[cite:\1]", text)
     text = re.sub(r"\\ref\{([^}]*)\}", r"[ref:\1]", text)
@@ -595,6 +599,135 @@ def extract_formulas(content: str) -> list[dict]:
 
 FIGURE_PATTERN = re.compile(r"\\begin\{figure\*?\}(.*?)\\end\{figure\*?\}", flags=re.S)
 
+# ---------------------------------------------------------------- 表格
+
+# 外层 table 环境（含 longtable 等变体），可选位置参数 [htbp]
+TABLE_ENV_PATTERN = re.compile(
+    r"\\begin\{(table\*?|longtable\*?|sidewaystable\*?|wraptable\*?)\}"
+    r"\s*(?:\[[^\]]*\])?(.*?)\\end\{\1\}",
+    flags=re.S,
+)
+
+# tabular 本体，列格式参数可能写成 {lcc} 或 [pos]{lcc}
+TABULAR_PATTERN = re.compile(
+    r"\\begin\{(tabular\*?|tabularx|longtable|array)\}"
+    r"\s*(?:\{[^{}]*\}|\[[^\]]*\]\{[^{}]*\})"
+    r"(.*?)\\end\{\1\}",
+    flags=re.S,
+)
+
+# 表格里只起排版作用的命令，解析时直接丢掉
+RULE_PATTERN = re.compile(
+    r"\\(?:toprule|midrule|bottomrule|hline"
+    r"|cline\{[^}]*\}|cmidrule(?:\([^)]*\))?\{[^}]*\}"
+    r"|addlinespace|vspace\*?\{[^}]*\}|arraystretch)\s*"
+)
+
+ROW_SPLIT_PATTERN = re.compile(r"\\\\(?:\s*\[[^\]]*\])?|\\cr\b|\\tabularnewline")
+
+
+def parse_tabular(body: str) -> list[list[str]]:
+    """把 tabular 内容切成行列。保留原始行列关系，这是表格唯一的价值。"""
+    body = RULE_PATTERN.sub(" ", body)
+    rows = []
+
+    for raw_row in ROW_SPLIT_PATTERN.split(body):
+        if not raw_row.strip():
+            continue
+        # 跨列单元格：\multicolumn{2}{c}{text} -> text
+        raw_row = re.sub(
+            r"\\multicolumn\{(\d+)\}\{[^{}]*\}\{([^{}]*)\}", r"\2", raw_row
+        )
+        cells = [clean_inline(cell) for cell in raw_row.split("&")]
+        if any(cell for cell in cells):
+            rows.append(cells)
+
+    return rows
+
+
+def extract_tables(content: str) -> list[dict]:
+    """
+    抽表格。表格往往承载论文的核心结果（精度对比），
+    但它们的文本如果留在正文里，会变成 "Dataset && IN1k & ..." 这种垃圾段落。
+    """
+    tables = []
+    covered = []
+
+    for match in TABLE_ENV_PATTERN.finditer(content):
+        covered.append((match.start(), match.end()))
+        block = match.group(2)
+
+        tabular = TABULAR_PATTERN.search(block)
+        rows = parse_tabular(tabular.group(2)) if tabular else []
+
+        caption = re.search(r"\\caption\{", block)
+        label = re.search(r"\\label\{([^}]*)\}", block)
+
+        tables.append({
+            "label": label.group(1) if label else "",
+            "caption": clean_inline(extract_braced(block, caption.end()))
+                       if caption else "",
+            "header": rows[0] if rows else [],
+            "rows": rows[1:] if len(rows) > 1 else [],
+            "columnCount": max((len(r) for r in rows), default=0),
+        })
+
+    # 游离的 tabular（没包在 table 环境里）
+    for match in TABULAR_PATTERN.finditer(content):
+        if any(start <= match.start() < end for start, end in covered):
+            continue
+        rows = parse_tabular(match.group(2))
+        if not rows:
+            continue
+        tables.append({
+            "label": "",
+            "caption": "",
+            "header": rows[0],
+            "rows": rows[1:],
+            "columnCount": max((len(r) for r in rows), default=0),
+        })
+
+    return tables
+
+
+# ---------------------------------------------------------------- 算法
+
+ALGORITHM_PATTERN = re.compile(
+    r"\\begin\{(algorithm\*?|algorithmic|algorithm2e)\}"
+    r"\s*(?:\[[^\]]*\])?(.*?)\\end\{\1\}",
+    flags=re.S,
+)
+
+
+def extract_algorithms(content: str) -> list[dict]:
+    """
+    抽算法环境。伪代码混在正文里会让段落读起来像乱码，
+    单独抽出来按步骤存，讲方法时反而能直接引用。
+    """
+    algorithms = []
+
+    for match in ALGORITHM_PATTERN.finditer(content):
+        block = match.group(2)
+        caption = re.search(r"\\caption\{", block)
+        label = re.search(r"\\label\{([^}]*)\}", block)
+
+        # 伪代码里以 \\ 分步，去掉控制命令但不能丢条件文本
+        body = RULE_PATTERN.sub(" ", block)
+        steps = []
+        for raw_step in re.split(r"\\\\", body):
+            step = clean_inline(raw_step)
+            if len(step) >= 4:
+                steps.append(step)
+
+        algorithms.append({
+            "label": label.group(1) if label else "",
+            "caption": clean_inline(extract_braced(block, caption.end()))
+                       if caption else "",
+            "steps": steps[:60],
+        })
+
+    return algorithms
+
 
 def extract_figures(content: str) -> list[dict]:
     """抽图表：图片路径 + 标题 + label"""
@@ -617,17 +750,27 @@ def extract_figures(content: str) -> list[dict]:
 def build_segments(sections: list[dict]) -> list[dict]:
     """
     把章节内容切成论证单元（这里先用段落近似，M1 再做语义切分）。
+
+    关键：图表、表格、算法、公式必须先抽走再切段。
+    否则表格的 "A & B & C" 会被当成正文，讲出来全是垃圾。
     """
     segments = []
     order = 0
 
     for section in sections:
         content = strip_comments(section["content"])
+
         figures = extract_figures(content)
+        tables = extract_tables(content)
+        algorithms = extract_algorithms(content)
         formulas = extract_formulas(content)
 
-        # 去掉图环境与公式环境，避免它们污染正文段落
+        # 依次抽走非正文块。顺序有讲究：先删 table 环境，
+        # 再删游离的 tabular，否则 table 的结束标签会残留。
         prose = FIGURE_PATTERN.sub(" ", content)
+        prose = TABLE_ENV_PATTERN.sub(" ", prose)
+        prose = TABULAR_PATTERN.sub(" ", prose)
+        prose = ALGORITHM_PATTERN.sub(" ", prose)
         prose = DISPLAY_FORMULA_PATTERN.sub(" ", prose)
         prose = BRACKET_FORMULA_PATTERN.sub(" ", prose)
         prose = DOLLAR_FORMULA_PATTERN.sub(" ", prose)
@@ -639,6 +782,8 @@ def build_segments(sections: list[dict]) -> list[dict]:
             text = clean_inline(raw)
             if len(text) >= MIN_PARA_LEN:
                 paragraphs.append(text)
+
+        section_start = len(segments)
 
         for paragraph in paragraphs:
             order += 1
@@ -653,20 +798,36 @@ def build_segments(sections: list[dict]) -> list[dict]:
                 "figureRefs": re.findall(r"\[ref:([^\]]+)\]", paragraph),
             })
 
-        # 图表挂到所属章节的第一段上，便于后续关联
-        if figures:
-            first = next((s for s in segments if s["section"] == section["title"]), None)
-            if first is not None:
-                first["figures"] = figures
-        if formulas:
-            first = next((s for s in segments if s["section"] == section["title"]), None)
-            if first is not None:
-                first["formulas"] = formulas
+        # 非正文对象挂到该章节的第一个段落上，便于后续按位置关联
+        if len(segments) > section_start:
+            anchor = segments[section_start]
+            if figures:
+                anchor["figures"] = figures
+            if tables:
+                anchor["tables"] = tables
+            if algorithms:
+                anchor["algorithms"] = algorithms
+            if formulas:
+                anchor["formulas"] = formulas
 
     return segments
 
 
 # ---------------------------------------------------------------- 质量自检
+
+def is_table_residue(text: str) -> bool:
+    """
+    判断一段是不是表格残渣。
+
+    表格残渣的特征不是「& 多」，而是「被 & 切成很多很短的片段」——单元格通常
+    只有几个词。正文里的 "Food & drink" 只有两三个片段，不会被误判。
+    """
+    cells = text.split("&")
+    if len(cells) < 4:
+        return False
+    short_cells = sum(1 for cell in cells if len(cell.strip()) <= 12)
+    return short_cells >= len(cells) * 0.6
+
 
 def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
     """
@@ -682,6 +843,16 @@ def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
 
     formula_count = sum(len(s.get("formulas", [])) for s in segments)
     figure_count = sum(len(s.get("figures", [])) for s in segments)
+    table_count = sum(len(s.get("tables", [])) for s in segments)
+    # 有数据行的表格才算真解析出来；只有表头或完全空的，要如实统计
+    tables_with_rows = sum(
+        1 for s in segments for t in s.get("tables", []) if t.get("rows")
+    )
+    algorithm_count = sum(len(s.get("algorithms", [])) for s in segments)
+
+    # 正文污染检测：真正的表格残渣是「多个很短的 & 分隔片段」，
+    # 不能只看 & 数量——正文里的 "Food & drink" 也算 &。
+    dirty = sum(1 for s in segments if is_table_residue(s["text"]))
 
     # 悬空引用：引用了全文任何位置都不存在的 label
     dangling = all_refs - all_labels
@@ -707,6 +878,12 @@ def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
             "pass": oversized_ratio <= MAX_OVERSIZED_RATIO,
         },
         {
+            "name": "表格残渣",
+            "value": dirty,
+            "threshold": "== 0",
+            "pass": dirty == 0,
+        },
+        {
             "name": "悬空引用",
             "value": len(dangling),
             "threshold": "<= %d" % MAX_DANGLING_REFS,
@@ -724,10 +901,14 @@ def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
             "sections": len(sections),
             "formulas": formula_count,
             "figures": figure_count,
+            "tables": table_count,
+            "tablesWithRows": tables_with_rows,
+            "algorithms": algorithm_count,
             "labels": len(all_labels),
             "refs": len(all_refs),
             "chars": sum(lengths),
             "medianPara": round(median_len, 1),
+            "dirtyParagraphs": dirty,
         },
         "danglingRefs": sorted(dangling)[:10],
     }
@@ -763,9 +944,10 @@ def print_report(paper: dict, quality: dict) -> None:
 
     stats = quality["stats"]
     print()
-    print("  统计   段落 %d · 章节 %d · 公式 %d · 图表 %d · 正文 %d 字"
+    print("  统计   段落 %d · 章节 %d · 公式 %d · 图 %d · 表 %d · 算法 %d · 正文 %d 字"
           % (stats["segments"], stats["sections"], stats["formulas"],
-             stats["figures"], stats["chars"]))
+             stats["figures"], stats.get("tables", 0),
+             stats.get("algorithms", 0), stats["chars"]))
     if quality["danglingRefs"]:
         print("  悬空   %s" % ", ".join(quality["danglingRefs"]))
     print()
