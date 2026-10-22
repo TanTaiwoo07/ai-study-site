@@ -1,0 +1,2431 @@
+{
+  "id": "pdf-2007-TEVC-MOEA_D_A_Multiobjective_Evolutionary_Algorithm_Bas",
+  "sourceType": "pdf",
+  "meta": {
+    "title": "MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition",
+    "authors": [],
+    "abstract": "tiobjective optimization. However, it has not yet been widely used in multiobjective evolutionary optimization. This paper proposes a multiobjective evolutionary algorithm based on decomposition (MOEA/D). It decomposes a multiobjective optimization problem into a number of scalar optimization subproblems and optimizes them simultaneously. Each subproblem is optimized by only using information from its several neighboring subproblems, which makes MOEA/D have lower computational complexity at each generation than MOGLS and nondominated sorting genetic algorithm II (NSGA-II). Experimental results have demonstrated that MOEA/D with simple decomposition methods outperforms or performs similarly to MOGLS and NSGA-II on multiobjective 0–1 knapsack problems and continuous multiobjective optimization problems. It has been shown that MOEA/D using objective normalization can deal with disparately-scaled objectives, and MOEA/D with an advanced decomposition method can generate a set of very evenly distributed solutions for 3-objective test instances. The ability of MOEA/D with small population, the scalability and sensitivity of MOEA/D have also been experimentally investigated in this paper.",
+    "arxivId": "",
+    "version": "",
+    "year": 2007,
+    "venue": "",
+    "peerReviewed": true
+  },
+  "map": {
+    "problem": "",
+    "claims": [],
+    "methodSteps": [],
+    "experiments": "",
+    "conclusions": [],
+    "limitations": []
+  },
+  "outline": [
+    {
+      "level": "section",
+      "title": "（正文）",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Based on Decomposition",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Abstract—Decomposition is a basic strategy in traditional mul-",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Index Terms—Computational complexity, decomposition, evolu-",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "I. INTRODUCTION",
+      "segments": 15,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+      "segments": 4,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "C. Boundary Intersection (BI) Approach",
+      "segments": 11,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "segments": 18,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "C. Variants of MOEA/D",
+      "segments": 5,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "IV. COMPARISON WITH MOGLS",
+      "segments": 13,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "C. Multiobjective 0–1 Knapsack Problem",
+      "segments": 9,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "1. Randomly generate a weight vector",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "2. Randomly generate a solution",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "3. Taking",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "4. Add",
+      "segments": 18,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "segments": 10,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "C. Variant of MOEA/D Used in Comparison",
+      "segments": 31,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "segments": 7,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "C. Scalability",
+      "segments": 2,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "VII. CONCLUSION",
+      "segments": 4,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "ACKNOWLEDGMENT",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "REFERENCES",
+      "segments": 46,
+      "appendix": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg-001",
+      "order": 1,
+      "section": "（正文）",
+      "level": "section",
+      "type": "",
+      "text": "IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-002",
+      "order": 2,
+      "section": "Based on Decomposition",
+      "level": "section",
+      "type": "",
+      "text": "Qingfu Zhang, Senior Member, IEEE, and Hui Li",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-003",
+      "order": 3,
+      "section": "Abstract—Decomposition is a basic strategy in traditional mul-",
+      "level": "section",
+      "type": "",
+      "text": "tiobjective optimization. However, it has not yet been widely used in multiobjective evolutionary optimization. This paper proposes a multiobjective evolutionary algorithm based on decomposition (MOEA/D). It decomposes a multiobjective optimization problem into a number of scalar optimization subproblems and optimizes them simultaneously. Each subproblem is optimized by only using information from its several neighboring subproblems, which makes MOEA/D have lower computational complexity at each generation than MOGLS and nondominated sorting genetic algorithm II (NSGA-II). Experimental results have demonstrated that MOEA/D with simple decomposition methods outperforms or performs similarly to MOGLS and NSGA-II on multiobjective 0–1 knapsack problems and continuous multiobjective optimization problems. It has been shown that MOEA/D using objective normalization can deal with disparately-scaled objectives, and MOEA/D with an advanced decomposition method can generate a set of very evenly distributed solutions for 3-objective test instances. The ability of MOEA/D with small population, the scalability and sensitivity of MOEA/D have also been experimentally investigated in this paper.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-004",
+      "order": 4,
+      "section": "Index Terms—Computational complexity, decomposition, evolu-",
+      "level": "section",
+      "type": "",
+      "text": "tionary algorithm, multiobjective optimization, Pareto optimality.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-005",
+      "order": 5,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "multiobjective optimization problem (MOP) can be stated as follows:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-006",
+      "order": 6,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "is the decision (variable) space, consists where real-valued objective functions and is called the objective space. The attainable objective set is deﬁned as the set , all the objectives are continuous and is described by where are continuous functions, we call (1) a continuous MOP.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-007",
+      "order": 7,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "Very often, since the objectives in (1) contradict each other, maximizes all the objectives simultaneously. One no point in has to balance them. The best tradeoffs among the objectives can be deﬁned in terms of Pareto optimality.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-008",
+      "order": 8,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "Manuscript received September 4, 2006; revised November 9, 2006. The authors are with the Department of Computer Science, University of Essex, Wivenhoe Park, Colchester, CO4 3SQ, U.K. (e-mail: qzhang@ essex.ac.uk; hlil@essex.ac.uk).",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-009",
+      "order": 9,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "Digital Object Identiﬁer 10.1109/TEVC.2007.892759 1089-778X/$25.00 © 2007 IEEE is said to dominate if and only if for every for at least one index .1 A point is Pareto optimal to (1) if such that dominates there is no point is then called a Pareto optimal (objective) vector. In other words, any improvement in a Pareto optimal point in one objective must lead to deterioration in at least one other objective. The set of all the Pareto optimal points is called the Pareto set (PS) and the set of all the Pareto optimal objective vectors is the Pareto front (PF) [1].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-010",
+      "order": 10,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "In many real-life applications of multiobjective optimization, an approximation to the PF is required by a decision maker for selecting a ﬁnal preferred solution. Most MOPs may have many or even inﬁnite Pareto optimal vectors. It is very time-consuming, if not impossible, to obtain the complete PF. On the other hand, the decision maker may not be interested in having an unduly large number of Pareto optimal vectors to deal with due to overﬂow of information. Therefore, many multiobjective optimization algorithms are to ﬁnd a manageable number of Pareto optimal vectors which are evenly distributed along the PF, and thus good representatives of the entire PF [1]–[4]. Some researchers have also made an effort to approximate the PF by using a mathematical model [5]–[8].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-011",
+      "order": 11,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "It is well-known that a Pareto optimal solution to a MOP, under mild conditions, could be an optimal solution of a scalar optimization problem in which the objective is an aggregation of ’s. Therefore, approximation of the PF can be decomall the posed into a number of scalar objective optimization subproblems. This is a basic idea behind many traditional mathematical programming methods for approximating the PF. Several methods for constructing aggregation functions can be found in the literature (e.g., [1]). The most popular ones among them include the weighted sum approach and Tchebycheff approach. Recently, the boundary intersection methods have also attracted a lot of attention [9]–[11].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-012",
+      "order": 12,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "There is no decomposition involved in the majority of the current state-of-the-art multiobjective evolutionary algorithms (MOEAs) [2]–[4], [12]–[19]. These algorithms treat a MOP as a whole. They do not associate each individual solution with any particular scalar optimization problem. In a scalar objective optimization problem, all the solutions can be compared based on their objective function values and the task of a scalar objective evolutionary algorithm (EA) is often to ﬁnd one single optimal solution. In MOPs, however, domination does not deﬁne a complete ordering among the solutions in the objective space and MOEAs aim at producing a number of Pareto optimal solutions as diverse as possible for representing the whole PF. Therefore, conventional selection operators, which were 1This deﬁnition of domination is for maximization. All the inequalities should be reversed if the goal is to minimize the objectives in (1). “Dominate” means “be better than.” Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION originally designed for scalar optimization, cannot be directly used in nondecomposition MOEAs. Arguably, if there is a ﬁtness assignment scheme for assigning an individual solution a relative ﬁtness value to reﬂect its utility for selection, then scalar optimization EAs can be readily extended for dealing with MOPs, although other techniques such as mating restriction [20], diversity maintaining [21], some properties of MOPs [22], and external populations [23] may also be needed for enhancing the performances of these extended algorithms. For this reason, ﬁtness assignment has been a major issue in current MOEA research. The popular ﬁtness assignment strategies include alternating objectives-based ﬁtness assignment such as the vector evaluation genetic algorithm (VEGA) [24], and domination-based ﬁtness assignment such as Pareto archived evolutionary strategy (PAES) [14], strength Pareto evolutionary algorithm II (SPEA-II) [15], and nondominated sorting genetic algorithm II (NSGA-II) [16].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-013",
+      "order": 13,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "The idea of decomposition has been used to a certain extent in several metaheuristics for MOPs [25]–[29]. For example, the two-phase local search (TPLS) [25] considers a set of scalar optimization problems, in which the objectives are aggregations of the objectives in the MOP under consideration, a scalar optimization algorithm is applied to these scalar optimization problems in a sequence based on aggregation coefﬁcients, a solution obtained in the previous problem is set as a starting point for solving the next problem since its aggregation objective is just slightly different from that in the previous one. The multiobjective genetic local search (MOGLS) aims at simultaneous optimization of all aggregations constructed by the weighted sum approach or Tchebycheff approach [29]. At each iteration, it optimizes a randomly generated aggregation objective. Inthispaper,weproposeanewmultiobjectiveevolutionaryalgorithm based on decomposition (MOEA/D). MOEA/D explicscalaroptimizationsubprobitlydecomposestheMOP(1)into lems. It solves these subproblems simultaneously by evolving a population of solutions. At each generation, the population is composed of the best solution found so far (i.e. since the start of therunofthealgorithm)foreachsubproblem.Theneighborhood relations among these subproblems are deﬁned based on the distancesbetweentheiraggregationcoefﬁcientvectors.Theoptimal solutionstotwoneighboringsubproblemsshouldbeverysimilar. Each subproblem (i.e., scalar aggregation function) is optimized inMOEA/D by using information only from its neighboringsubproblems. MOEA/D has the following features.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-014",
+      "order": 14,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "• MOEA/D provides a simple yet efﬁcient way of introducing decomposition approaches into multiobjective evolutionary computation. A decomposition approach, often developed in the community of mathematical programming, can be readily incorporated into EAs in the framework MOEA/D for solving MOPs.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-015",
+      "order": 15,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "scalar optimization problems • Since MOEA/D optimizes rather than directly solving a MOP as a whole, issues such as ﬁtness assignment and diversity maintenance that cause difﬁculties for nondecomposition MOEAS could become easier to handle in the framework of MOEA/D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-016",
+      "order": 16,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "• MOEA/D has lower computational complexity at each generation than NSGA-II and MOGLS. Overall, MOEA/D outperforms, in terms of solution quality, MOGLS on 0–1 multiobjective knapsack test instances when both algorithms use the same decomposition approach. MOEA/D with the Tchebycheff decomposition approach performs similarly to NSGA-II on a set of continuous MOP test instances. MOEA/D with an advanced decomposition approach performs much better than NSGA-II on 3-objective continuous test instances. MOEA/D using a small population is able to produce a small number of very evenly distributed solutions.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-017",
+      "order": 17,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "• Objective normalization techniques can be incorporated into MOEA/D for dealing with disparately scaled objectives.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-018",
+      "order": 18,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "• It is very natural to use scalar optimization methods in MOEA/D since each solution is associated with a scalar optimization problem. In contrast, one of the major shortcomings of nondecomposition MOEAs is that there is no easy way for them to take the advantage of scalar optimization methods.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-019",
+      "order": 19,
+      "section": "I. INTRODUCTION",
+      "level": "section",
+      "type": "",
+      "text": "This paper is organized as follows. Section II introduces three decomposition approaches for MOPs. Section III presents MOEA/D. Sections IV and V compare MOEA/D with MOGLS and NSGA-II and show that MOEA/D outperforms or performs similarly to MOGLS and NSGA-II. Section VI presents more experimental studies on MOEA/D. Section VII concludes this paper.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-020",
+      "order": 20,
+      "section": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+      "level": "section",
+      "type": "",
+      "text": "There are several approaches for converting the problem of approximation of the PF into a number of scalar optimization problems. In the following, we introduce three approaches, which are used in our experimental studies.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-021",
+      "order": 21,
+      "section": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+      "level": "section",
+      "type": "",
+      "text": "A. Weighted Sum Approach [1] This approach considers a convex combination of the difbe a weight vector, ferent objectives. Let i.e., for all . Then, the optimal solution to the following scalar optimization problem: is a Pareto optimal point to (1),2 where we use to emphasize that is a coefﬁcient vector in this objective function, is the variables to be optimized. To generate a set of while different Pareto optimal vectors, one can use different weight in the above scalar optimization problem. If the PF vectors is concave (convex in the case of minimization), this approach could work well. However, not every Pareto optimal vector can be obtained by this approach in the case of nonconcave PFs. To overcome these shortcomings, some effort has been made to -constraint into this apincorporate other techniques such as proach, more details can be found in [1].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-022",
+      "order": 22,
+      "section": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+      "level": "section",
+      "type": "",
+      "text": "B. Tchebycheff Approach [1] In this approach, the scalar optimization problem is in the form where is the reference point, i.e., 3 for each . For each Pareto 2If (1) is for minimization, “maximize” in (2) should be changed to “minimize.” 3In the case when the goal of (1) is minimization, z = minff (x)jx 2 \ng.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-023",
+      "order": 23,
+      "section": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 optimal point there exists a weight vector such that is the optimal solution of (3) and each optimal solution of (3) is a Pareto optimal solution of (1). Therefore, one is able to obtain different Pareto optimal solutions by altering the weight vector. One weakness with this approach is that its aggregation function is not smooth for a continuous MOP. However, it can still be used in the EA framework proposed in this paper since our algorithm does not need to compute the derivative of the aggregation function.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-024",
+      "order": 24,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "Several recent MOP decomposition methods such as Normal-Boundary Intersection Method [9] and Normalized Normal Constraint Method [10] can be classiﬁed as the BI approaches. They were designed for a continuous MOP. Under some regularity conditions, the PF of a continuous MOP is part of the most top right4 boundary of its attainable objective set. Geometrically, these BI approaches aim to ﬁnd intersection points of the most top boundary and a set of lines. If these lines are evenly distributed in a sense, one can expect that the resultant intersection points provide a good approximation to the whole PF. These approaches are able to deal with nonconcave PFs. In this paper, we use a set of lines emanating from the reference point. Mathematically, we consider the following scalar optimization subproblem5:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-025",
+      "order": 25,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": ", as in the above subsection, are a weight vector where and the reference point, respectively. As illustrated in Fig. 1, the ensures that is always in constraint the line with direction and passing through . The goal is to push as high as possible so that it reaches the boundary of the attainable objective set.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-026",
+      "order": 26,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "One of the drawbacks of the above approach is that it has to handle the equality constraint. In our implementation, we use a penalty method to deal with the constraint. More precisely, we consider6:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-027",
+      "order": 27,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "where is a preset penalty parameter. Let be the projection of on the line . As shown in Fig. 2, is the distance between is the distance between . If is set appropriately, the solutions to (4) and (5) should be very close. Hereafter, we call this method the penalty-based boundary intersection (PBI) approach.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-028",
+      "order": 28,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "The advantages of the PBI approach (or general BI approaches ) over the the Tchebycheff approach are as follows. 4In the case of minimization, it will be part of the most left bottom. 5In the case when the goal of (1) is minimization, this equality constraint in this subproblem should be changed to F (x) \u0000 z = d\u0015.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-029",
+      "order": 29,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "case when goal minimization, \u0015k=k\u0015k and to d = kF(x) \u0000 (z \u0015)k.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-030",
+      "order": 30,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "k(F(x) \u0000 z Fig. 1. Illustration of boundary intersection approach.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-031",
+      "order": 31,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "Fig. 2. Illustration of the penalty-based boundary intersection approach. • In the case of more than two objectives, let both the PBI approach and the Tchebycheff approach use the same set of evenly distributed weight vectors, the resultant optimal solutions in the PBI should be much more uniformly distributed than those obtained by the Tchebycheff approach [9], particularly when the number of weight vectors is not large.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-032",
+      "order": 32,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "dominates , it is still possible that • If , while it is rare for and other BI aggregation functions.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-033",
+      "order": 33,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "However, these beneﬁts come with a price. One has to set the value of the penalty factor. It is well-known that a too large or too small penalty factor will worsen the performance of a penalty method.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-034",
+      "order": 34,
+      "section": "C. Boundary Intersection (BI) Approach",
+      "level": "section",
+      "type": "",
+      "text": "The above approaches can be used to decompose the approximation of the PF into a number of scalar optimization problems. A reasonably large number of evenly distributed weight vectors usually leads to a set of Pareto optimal vectors, which may not be evenly spread but could approximate the PF very well. There are many other decomposition approaches in the literature that could also be used in our algorithm framework. Since Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION our major purpose is to study the feasibility and efﬁciency of the algorithm framework. We only use the above three decomposition approaches in the experimental studies in this paper.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-035",
+      "order": 35,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "ALGORITHM BASED ON DECOMPOSITION (MOEA/D) A. General Framework Multiobjective evolutionary algorithm based on decomposition (MOEA/D), the algorithm proposed in this paper, needs to decompose the MOP under consideration. Any decomposition approaches can serve this purpose. In the following description, we suppose that the Tchebycheff approach is employed. It is very trivial to modify the following MOEA/D when other decomposition methods are used.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-036",
+      "order": 36,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "be a set of even spread weight vectors and be the reference point. As shown in Section II, the problem of scalar approximation of the PF of (1) can be decomposed into optimization subproblems by using the Tchebycheff approach th subproblem is and the objective function of the . MOEA/D minimizes all these where objective functions simultaneously in a single run. is continuous of , the optimal solution of Note that should be close to that of are close to each other. Therefore, any information about ’s with weight vectors close to should be helpful these for optimizing . This is a major motivation behind MOEA/D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-037",
+      "order": 37,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "is deﬁned In MOEA/D, a neighborhood of weight vector as a set of its several closest weight vectors in The neighborhood of the th subproblem consists of all the subproblems with the weight vectors from the neighborhood of The population is composed of the best solution found so far for each subproblem. Only the current solutions to its neighboring subproblems are exploited for optimizing a subproblem in MOEA/D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-038",
+      "order": 38,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "At each generation , MOEA/D with the Tchebycheff approach maintains:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-039",
+      "order": 39,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "• a population of points , where is the current solution to the th subproblem; , where is the -value of , i.e., for each , where is the best value found so far for objective • an external population (EP), which is used to store nondominated solutions found during the search. The algorithm works as follows:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-040",
+      "order": 40,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Input: • MOP (1); • a stopping criterion; : the number of the subproblems considered in MOEA/D; • a uniform spread of weight vectors:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-041",
+      "order": 41,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": ": the number of the weight vectors in the neighborhood of each weight vector.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-042",
+      "order": 42,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Output: Step 1) Initialization: Step 1.1) Set Step 1.2) Compute the Euclidean distances between any closest weight two weight vectors and then work out the , set vectors to each weight vector. For each , where are the closest weight vectors to Step 1.3) Generate an initial population randomly or by a problem-speciﬁc method. Set Step 1.4) Initialize by a problem-speciﬁc method.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-043",
+      "order": 43,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Step 2) Update: , do Step 2.1) Reproduction: Randomly select two indexes from , and then generate a new solution from by using genetic operators.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-044",
+      "order": 44,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Step 2.2) Improvement: Apply a problem-speciﬁc repair/ improvement heuristic on to produce : For each , if Step 2.3) Update of , then set Step 2.4) Update of Neighboring Solutions: For each index , if , then set Step 2.5) Update of all the vectors dominated by Remove from if no vectors in dominate Step 3) Stopping Criteria: If stopping criteria is satisﬁed, then stop and output . Otherwise, go to Step 2.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-045",
+      "order": 45,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "contains the indexes of the closest In initialization, vectors of . We use the Euclidean distance to measure the closeness between any two weight vectors. Therefore, closest vector is itself, and then . If , the th subproblem can be regarded as a neighbor of the th subproblem.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-046",
+      "order": 46,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "In the th pass of the loop in Step 2, the neighboring subproblems of the th subproblem are considered. Since in Step 2.1 are the current best solutions to neighbors of the th subproblem, their offspring should hopefully be a good solution to the th subproblem. In Step 2.2, a problem-speciﬁc heuristic7 is used to repair in the case when invalidates any constraints, and/or optimize the . Therefore, the resultant solution is feasible and very likely to have a lower function value for the neighbors of th subproblem. Step 2.4 considers all the neighbors of the th subproblem, it replaces with performs better than with regard to the th subproblem.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-047",
+      "order": 47,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "is needed in computing the value of in Step 2.4.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-048",
+      "order": 48,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Since it is often very time-consuming to ﬁnd the exact reference point , we use , which is initialized in Step 1.4 by a 7An exemplary heuristic can be found in the implementation of MOEA/D for the MOKP in Section IV.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-049",
+      "order": 49,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 problem-speciﬁc method8 and updated in Step 2.3, as a substi- . The external population , initialized in Step tute for in Step 2.5.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-050",
+      "order": 50,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "1.1, is updated by the new generated solution , the In the case when the goal in (1) is to minimize inequality in Step 2.3 should be reversed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-051",
+      "order": 51,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "B. Discussions 1) Why a Finite Number of Subproblems are Considered in MOEA/D: A weight vector used in MOEA/D is one of the preselected weight vectors. MOEA/D spends about the same aggregation functions, while amount of effort on each of the MOGLS randomly generates a weight vector at each iteration, aiming at optimizing all the possible aggregation functions. Recall that a decision maker only needs a ﬁnite number of evenly distributed Pareto solutions, optimizing a ﬁnite of selected scalar optimization subproblems is not only realistic but also appropriate. Since the computational resource is always limited, optimizing all the possible aggregation functions would not be very practical, and thus may waste some computational effort. 2) How Diversity is Maintained in MOEA/D: As mentioned in Section I, a MOEA needs to maintain diversity in its population for producing a set of representative solutions. Most, if not all, of nondecomposition MOEAs such as NSGA-II and SPEA-II use crowding distances among the solutions in their selection to maintain diversity. However, it is not always easy to generate a uniform distribution of Pareto optimal objective vectors in these algorithms. In MOEA/D, a MOP is decomposed into a number of scalar optimization subproblems. Different solutions in the current population are associated with different subproblems. The “diversity” among these subproblems will naturally lead to diversity in the population. When the decomposition method and the weight vectors are properly chosen, and thus the optimal solutions to the resultant subproblems are evenly distributed along the PF, MOEA/D will have a good chance of producing a uniform distribution of Pareto solutions if it optimizes all these subproblems very well. in MOEA/D:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-052",
+      "order": 52,
+      "section": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+      "level": "section",
+      "type": "",
+      "text": "3) Mating Restriction and the Role of the size of the neighborhood. Only current solutions to the closest neighbors of a subproblem are used for optimizing it in MOEA/D. In a sense, two solutions have a chance to mate only when they are for two neighboring subproblems. This is a . If mating restriction. Attention should be paid to the setting of is too small, two solutions chosen ( ) for undergoing genetic operators in Step 2.1 may be very similar since they are for very similar subproblems, consequently, , the solution generated in Step 2.2, could be very close to their parents . Therefore, the algorithm lacks the ability to explore new areas in the search space. On the other hand, if is too large, may be poor for the subproblem under consideration, and so is their offspring . Therefore, the exploitation ability of the algorithm is weakened. Moreover, a too large will increase the computational overhead of Step 2.4.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-053",
+      "order": 53,
+      "section": "C. Variants of MOEA/D",
+      "level": "section",
+      "type": "",
+      "text": "We can use any other decomposition methods in MOEA/D. When the weighted sum approach is used, MOEA/D does not need to maintain 8Two exemplary methods can be found in Sections IV and V.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-054",
+      "order": 54,
+      "section": "C. Variants of MOEA/D",
+      "level": "section",
+      "type": "",
+      "text": "Step 2.2 allows MOEA/D to be able to make use of a scalar optimization method very naturally. One can take the as the objective function in the heuristic in Step 2.2. Although it is one of the major features of MOEA/D, Step 2.2 is not a must in MOEA/D, particularly if Step 2.1 can produce a feasible solution.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-055",
+      "order": 55,
+      "section": "C. Variants of MOEA/D",
+      "level": "section",
+      "type": "",
+      "text": "is also an option, although Using the external population it is often very helpful for improving the performance of the algorithm. An alternative is to return the ﬁnal internal populais not maintained.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-056",
+      "order": 56,
+      "section": "C. Variants of MOEA/D",
+      "level": "section",
+      "type": "",
+      "text": "tion as an approximation to the PF when Of course, other sophisticated strategies [21] for updating can be easily adopted in the framework of MOEA/D. One can to avoid any possible memory overﬂow also limit the size of problem.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-057",
+      "order": 57,
+      "section": "C. Variants of MOEA/D",
+      "level": "section",
+      "type": "",
+      "text": "The cellular multiobjective genetic algorithm (cMOGA) of Murata et al. [40] can also be regarded as an evolutionary algorithm using decomposition. In essence it uses the same neighborhood relationship for mating restriction. cMOGA differs from MOEA/D in selecting solutions for genetic operators and updating the internal population, and it has to insert solutions from its external population to its internal population at each generation for dealing with nonconvex PFs, since it uses weighted sums of the objectives as its guided functions and there is no mechanism for keeping the best solution found so far to each subproblem in its internal population.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-058",
+      "order": 58,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "In the following, we ﬁrst introduce MOGLS and then analyze the complexity of MOGLS and MOEA/D. We also compare the performances of these two algorithms on a set of test instances of the multiobjective 0/1 knapsack problem. The major reasons for choosing MOGLS for comparison are that it is also based on decomposition and performs better than a number of popular algorithms on the multiobjective 0/1 knapsack problem [29]. A. MOGLS MOGLS was ﬁrst proposed by Ishibuchi and Murata in [28], and further improved by Jaszkiewicz [29]. The basic idea is to reformulate the MOP (1) as simultaneous optimization of all weighted Tchebycheff functions or all weighted sum functions. In the following, we give a brief description of Jaszkiewicz’s version of MOGLS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-059",
+      "order": 59,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "At each iteration, MOGLS maintains: -values of these • a set of current solutions (CS), and the solutions; • an external population (EP), which is used to store nondominated solutions.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-060",
+      "order": 60,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "If MOGLS optimizes weighted Tchebycheff functions, it should also maintain:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-061",
+      "order": 61,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": ", where is the largest value found so far for objective is the size MOGLS needs two control parameters is the initial size of of its temporary elite population and Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION MOGLS works as follows:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-062",
+      "order": 62,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "Input: • MOP (1); • a stopping criterion; : the size of temporary elite population; : the size of initial population.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-063",
+      "order": 63,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "Output: Step 1) Initialization: initial solutions randomly Step 1.1) Generate is initialized to or by a problem-speciﬁc method. Then, by a problem-speciﬁc Step 1.2) Initialize method.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-064",
+      "order": 64,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "is initialized to be the set of the -values of Step 1.3) all the nondominated solutions in Step 2) Update:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-065",
+      "order": 65,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "Step 2.1) Reproduction: Uniformly randomly generate a weight vector select the best solutions, with regard to the From with the weight vector Tchebycheff aggregation function , to form a temporary elite population (TEP). , and then generate Draw at random two solutions from from these two solutions by using genetic a new solution operators.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-066",
+      "order": 66,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "Step 2.2) Improvement: Apply a problem-speciﬁc repair/ improvement heuristic on to generate : For each , if Step 2.3) Update of , then set Step 2.4) Update of Solutions in TEP: is better than the worst solution in with regard to with the weight vector and different from any solutions with regard to -values, then add it to the set is larger than , delete the oldest If the size of solution in Step 2.5) Update of EP:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-067",
+      "order": 67,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "all the vectors dominated by Remove from if no vectors in dominates Step 3) Stopping Criteria: If stopping criteria is satisﬁed, . Otherwise, go to Step 2.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-068",
+      "order": 68,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "then stop and output As in MOEA/D with the Tchebycheff approach, is used as a substitute for . In the case of MOGLS with the should be replaced by and there weighted sum approach, . Therefore, Step 2.3 should be removed. is no need to store -values of all the current solutions MOGLS needs to keep the since these -values will be used in Step 2.4 for computing the values of B. Comparison of Complexity of MOEA/D and MOGLS 1) Space Complexity: During the search, MOEA/D needs solutions, and external to maintain its internal population of population , while MOGLS stores the set of current solutions and its external population . The size of increases until it reaches its upper bound, which is suggested to be set as in [29]. Therefore, if in MOGLS is much larger than in MOEA/D and both algorithms produce about the same number of nondominated solutions, then the space complexity of MOEA/D is lower than that of MOGLS. 2) Computational Complexity: The major computational costs in both MOEA/D and MOGLS are involved in their Step 2. Both a single pass of Step 2 in MOEA/D and Step 2 in . Let us compare MOGLS generates one new trial solution the computational complexity in a single pass of Step 2 in MOEA/D and Step 2 in MOGLS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-069",
+      "order": 69,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "• Step 2.1 in MOEA/D versus Step 2.1 in MOGLS: MOGLS . One has to compute the -values has to generate of all the points in , which needs basic basic operations for operations. It also needs if a naive selection method is employed, selecting while Step 2.1 in MOEA/D only needs to randomly pick , the size two solutions for genetic operators. Note that , could be very large (e.g, it was set from 3000 to 7000 in [29]), the computational cost of Step 2.1 in MOGLS is much higher than that of Step 2.1 in MOEA/D. • Steps 2.2 and 2.3 in MOEA/D are the same as Steps 2.2 and 2.3 in MOGLS, respectively.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-070",
+      "order": 70,
+      "section": "IV. COMPARISON WITH MOGLS",
+      "level": "section",
+      "type": "",
+      "text": "• Step 2.4 in MOEA/D versus Step 2.4 in MOGLS: Step 2.4 basic operations, while Step 2.4 in MOEA/D needs in MOGLS needs basic operations. In the case when are close as in our experiments, there is no signiﬁcant difference in computational costs between them. Therefore, we can conclude that each pass of Step 2 in MOEA/D involves less computational cost than Step 2 in MOGLS does.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-071",
+      "order": 71,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "Given a set of items and a set of knapsacks, the multiobjective 0–1 knapsack problem (MOKP) can be stated as where is the proﬁt of item in knapsack is the weight of item in knapsack , and is the capacity of means that item is selected and put in all knapsack the knapsacks.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-072",
+      "order": 72,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "The MOKP is NP-hard and can model a variety of applications in resource allocation. A set of nine test instances of the above problem have been proposed in [13] and widely used in testing multiobjective heuristics. MOGLS outperforms a number of MOEAs on these test instances [29]. In this paper, Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 we will also use these nine instances for comparing the performances of MOEA/D and MOGLS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-073",
+      "order": 73,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "D. Implementations of MOEA/D and MOGLS for MOKP 1) Repair Method: To apply an EA for the MOKP, one needs a heuristic for repairing infeasible solutions. Several repair approaches have been proposed for this purpose [13], [29]. be an infeasible solution to in (7) are nonnegative, one can remove (7). Note that from 1 to some items from it (i.e., change the values of some 0) for making it feasible. Recently, Jaszkiewicz proposed and used the following greedy repair method9.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-074",
+      "order": 74,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "Input: • MOP (7); • a solution: • an objective function to be maximized:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-075",
+      "order": 75,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "Output: a feasible solution Step 1) If is feasible, then set and return Step 2) Set such that Step 3) Select where is different from only in position , i.e., for all and go to Step 1.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-076",
+      "order": 76,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "In this approach, items are removed one by one from until becomes feasible. An item with the heavy weights (i.e., ) in the overﬁlled knapsacks and little contribution to (i.e., ) is more likely to be removed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-077",
+      "order": 77,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "2) Implementation of MOGLS: To have a fair comparison, we directly use Jaszkiewicz’s latest implementation of MOGLS for the MOKP, the details of MOGLS with the Tchebycheff approach are given as follows.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-078",
+      "order": 78,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": ": Taking each as the • Initialization of objective function, apply the repair method on a randomly generated point and produce a feasible solution. Set value of the resultant point.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-079",
+      "order": 79,
+      "section": "C. Multiobjective 0–1 Knapsack Problem",
+      "level": "section",
+      "type": "",
+      "text": "be the • Initialization of . Then, Repeat times:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-080",
+      "order": 80,
+      "section": "1. Randomly generate a weight vector",
+      "level": "section",
+      "type": "",
+      "text": "by using the sampling method described in [29].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-081",
+      "order": 81,
+      "section": "2. Randomly generate a solution",
+      "level": "section",
+      "type": "",
+      "text": ", where the probability of equals to 0.5.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-082",
+      "order": 82,
+      "section": "3. Taking",
+      "level": "section",
+      "type": "",
+      "text": "as the objective function, apply the and obtain a feasible solution repair method to 9This approach is used in the latest version of his implementation, which can be downloaded from his web http://www-idss.cs.put.poznan.pl/ jaszkiewicz/ and is slightly better than that used in his earlier paper [29].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-083",
+      "order": 83,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": ". Remove from all the vectors dominated , then add to EP if no vectors in dominate • Genetic operators in Step 2.1: The genetic operators used are the one-point crossover operator and the standard mutation operator. The one-point crossover is ﬁrst applied to the two solutions and generates one child solution, then the standard mutation operator mutates it to produce a . The mutation mutates each position of the new solution child solution independently with probability 0.01. • Heuristic in Step 2.2: The repair method described in this section is used.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-084",
+      "order": 84,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "3) Implementation of MOEA/D: We use the same genetic operators in Step 2.1 and the repair method in Step 2.2 as in the is also the implementation of MOGLS. The initialization of (the initial solution to same as in MOGLS. Initialization of th subproblem) is performed as follows.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-085",
+      "order": 85,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "in Step 1.3: Taking • Initialization of as the objective function, apply the repair method to a randomly generated solution. Set to be the resultant solution.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-086",
+      "order": 86,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "is used in the above Tchebycheff aggregation function implementations of MOEA/D and MOGLS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-087",
+      "order": 87,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "The implementations of these two algorithms with the weighted sum approach in our experimental studies are the same as their counterparts with the Tchebycheff approach, as the objective in the repair method except that they use and do not maintain E. Parameter Setting The setting of in MOGLS, which determines the size , is the same as in [29].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-088",
+      "order": 88,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "is set to 20 for all the instances. for different instances are given in Table I.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-089",
+      "order": 89,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "The values of in MOEA/D is set to 10 for all the test instances. The setting of in MOEA/D is controlled by a param- . More precisely, are all the weight vectors in eter which each individual weight takes a value from Therefore, the number of such vectors is Table I lists the value of in MOEA/D for each test instance. For the instances with two objectives, the value of in MOEA/D is the same as that of in MOGLS. For all the , and therefore instances with three objectives, . For all the instances with four objectives, , and . It should be noted that the size of the internal then in MOGLS can reach , much larger than population that of the internal population in MOEA-D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-090",
+      "order": 90,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "The above method for generating weight vectors in MOEA-D works well in our experiments. It could, however, result in a very when , the number of the objectives is large. To overlarge come this shortcoming, one should resort to advanced experimental design methods [30], [31] to generate weight vectors. Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION TABLE I PARAMETER SETTING OF MOEA/D AND MOGLS FOR THE TEST INSTANCES OF THE 0/1 KNAPSACK PROBLEM Both of the algorithms stop after 500 calls of the repair method.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-091",
+      "order": 91,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "have been In our experimental studies, both used in the repair method. In the following, W-MOEA/D (W-MOGLS) stands for MOEA/D (MOGLS) in which is used, while T-MOEA/D (T-MOGLS) represents MOEA/D is used.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-092",
+      "order": 92,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "(MOGLS) in which F. Experimental Results Both MOGLS and MOEA/D have been independently run for 30 times for each test instance on identical computers (Pentium(R) 3.2 GHZ, 1.00 GB). Due to the nature of MOPs, multiple performance indexes should be used for comparing the performances of different algorithms [2], [32]. In our experiments, the following performance indexes are used. -metric): Let be two approx- • Set Coverage ( imations to the PF of a MOP, is deﬁned as the that are dominated by at percentage of the solutions in , i.e., least one solution in is not necessarily equal to means that all solutions in are dominated , while implies that by some solutions in is dominated by a solution in no solution in -metric):",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-093",
+      "order": 93,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "• Distance from Representatives in the PF ( be a set of uniformly distributed points along the be an approximation to the PF, the average dis- PF. Let is deﬁned as tance from where is the minimum Euclidean distance between and the points in . If is large enough to represent could measure both the diverthe PF very well, in a sense. To have a low value sity and convergence of , set must be very close to the PF and cannot miss any part of the whole PF.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-094",
+      "order": 94,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "In the case when we do not know the actual PF, we can set to be an upper approximation of the PF. Jaszkiewicz TABLE II AVERAGE CPU TIME (IN SECONDS) USED BY MOEA/D AND MOGLS TABLE III AVERAGE SET COVERAGE BETWEEN MOEA/D (A) AND MOGLS (B) has produced a very good upper approximation to each 0/1 knapsack test instance by solving the linear programming relaxed version of (3) with a number of uniformly ’s [29]. The number of the points in the distributed upper approximation is 202 for each of the bi-objective instances, 1326 for the 3-objective instances, and 3276 for is set as such an the 4-objectives. In our experiments, approximation.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-095",
+      "order": 95,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "Table II gives the average CPU time used by each algorithm -metric for each instance. Table III presents the means of the values of the ﬁnal approximations obtained by the two algorithms with two different repair methods.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-096",
+      "order": 96,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "Table IV shows the mean and standard deviation of the -metric values in MOEA/D and MOGLS for each instance. Fig. 3 shows the evolution of the average -metric value from in 30 runs with the number of the calls of the repair method in each algorithm for each test instance. -metric values are large, we use the Since the ranges of -metric value logarithmic scale for the axes of the average with the in Fig. 3. Figs. 4 and 5 plot the distributions of -metric value found in each algorithm for the three lowest bi-objective instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-097",
+      "order": 97,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "We can make the following remarks: • With the same number of the calls of a repair method (i.e., the same number of trial solutions), it is evident from Table II that MOEA/D needs less computational Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 TABLE IV D-METRIC VALUES OF THE SOLUTIONS FOUND BY MOEA/D AND MOGLS. THE NUMBERS IN PARENTHESES REPRESENT THE STANDARD DEVIATION time than MOGLS does. On average, MOEA/D requires about 14",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-098",
+      "order": 98,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "obtained by • Tables III and IV show that the ﬁnal W-MOEA/D (T-MOEA/D) is better than that obtained -metric by W-MOGLS (T-MOGLS), in terms of both -metric, for all the test instances except instance 250–4 in which W-MOEA/D is slightly worse than -metric. Taking instance 500–3 as an W-MOGLS in example, on average, 90.97",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-099",
+      "order": 99,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "• Table IV also shows that the standard deviation of -metric in W-MOEA/D (T-MOEA/D) is smaller than that in W-MOGLS (T-MOGLS) for all the instances, which implies that MOEA/D is more stable than MOGLS. • Table IV and Fig. 3 reveal that the weighted sum approach outperforms the Tchebycheff approach in both MOEA/D and MOGLS, which suggests that different decomposition approaches in MOEA/D and MOGLS can have different performances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-100",
+      "order": 100,
+      "section": "4. Add",
+      "level": "section",
+      "type": "",
+      "text": "Overall, we can claim that MOEA/D is computationally much cheaper and can produce better approximations than MOGLS on these MOKP test instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-101",
+      "order": 101,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "A. Multiobjective Continuous Test Suites We use ﬁve widely used bi-objective ZDT test instances [33] and two 3-objective instances [34] in comparing MOEA/D with NSGA-II [16], one of the most successful nondecomposition MOEAs. All these test instances are minimization of the objectives.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-102",
+      "order": 102,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "• ZDT1 . Its PF is convex. in our experiments.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-103",
+      "order": 103,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "• ZDT2 where and the range and dimensionality of are the same as in ZDT1. The PF of ZDT2 is nonconvex. • ZDT3 where and the range and dimensionality of are the same as in ZDT1. Its PF is disconnected. The two objecis from 0 to 0.852, tives are disparately scaled in the PF, from to 1.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-104",
+      "order": 104,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "while • ZDT4 where . It has many in our experiments.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-105",
+      "order": 105,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "local PFs. Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION • ZDT6 . Its PF is nonconvex.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-106",
+      "order": 106,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "The distribution of the Pareto solutions in the Pareto front is very nonuniform, i.e., for a set of uniformly distributed points in the Pareto set in the decision space, their images crowd in a corner of the Pareto front in the objective space. in our experiments.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-107",
+      "order": 107,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "• DTLZ1 where . Its PF is nonconvex. The function value of a Pareto optimal solution satisﬁes with , 2, 3.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-108",
+      "order": 108,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "in our experiments. • DTLZ2 where . Its PF is nonconvex. The function value of a Pareto optimal solution with , 2, 3.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-109",
+      "order": 109,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "satisﬁes our experiments. B. NSGA-II [16] NSGA-II does not use an external population. NSGA-II maintains a population of size at generation and generfrom in the following way.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-110",
+      "order": 110,
+      "section": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+      "level": "section",
+      "type": "",
+      "text": "ates Step 1) Use selection, crossover and mutation to create an from offspring population Step 2) Choose best solutions from to form The characteristic feature of NSGA-II is that it uses a fast nondominated sorting and crowded distance estimation procedure for comparing qualities of different solutions in Step 2 and selection in Step 1. The computational complexity of each gen- , where is the number of the eration in NSGA-II is is its population size.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-111",
+      "order": 111,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "To have a fair comparison, we use the following variant of MOEA/D in our experiments.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-112",
+      "order": 112,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": ". Instead, the ﬁnal in- • There is no external population ternal population is returned as an approximation to the PF. Step 2.5 is not needed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-113",
+      "order": 113,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "• No repair/improvement method is used, therefore, Step 2.2 is not needed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-114",
+      "order": 114,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "is used in Step 2.4. mainly because the weighted sum ap- We do not use proach is unable to deal with nonconvex PFs as is the case in some test instances. Since NSGA-II has no external population, we do not maintain an external population in this implementation of MOEA/D. In comparison with NSGA-II, the only extra . The size of memory requirement in MOEA/D is for storing , which is very small compared with the population size.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-115",
+      "order": 115,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "D. Comparison of Computational Complexity of the Variant of MOEA/D and NSGA-II In the above variant of MOEA/D, the major computational costs are in Step 2. Step 2 in MOEA/D generates trial solutions, so does NSGA-II at each generation. Note that Steps 2.2 and 2.5 have been removed from this variant, Step 2.1 just randomly pick two solutions for genetic operators, Step 2.3 percomparisons and assignments, and Step 2.4 needs forms basic operations since its major costs are to compute solutions and computation of one such a the values of basic operations. Therefore, the computavalue requires tional complexity of Step 2 in the above variant of MOEA/D is since it has passes. If both MOEA/D and NSGA-II use the same population size, the ratio between their computational complexities at each generation is Since is smaller than , the variant of MOEA/D has lower computational complexity than NSGA-II at each generation. E. Experimental Setting In our experimental studies, the implementation of NSGA-II follows [16]. The population size in both NSGA-II and MOEA/D is set to be 100 for all the 2-objective test instances, and 300 for the other two 3-objective test instances. Both algorithms stop after 250 generations.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-116",
+      "order": 116,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Initial populations are generated by uniformly randomly sampling from the feasible search space in both algorithms. found in the MOEA/D is initialized as the lowest value of initial population. The simulated binary crossover (SBX) and polynomial mutation are used in both NSGA-II and MOEA/D. More precisely, in Step 2.1 of MOEA/D, the crossover operator generates one offspring, which is then modiﬁed by the mutation operator. The setting of the control parameters in these two Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 Fig. 3. The evolution of the average D-metric in MOEA/D and MOGLS for all the MOKP instances. The base 10 logarithmic scale is used for the y axis in all these ﬁgures.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-117",
+      "order": 117,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "operators is the same in both algorithms. Following the practice in [16], the distribution indexes in both SBX and the polynomial mutation are set to be 20. The crossover rate is 1.00, , where is the number of deciwhile the mutation rate is sion variables.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-118",
+      "order": 118,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "is the In MOEA/D, the setting of weight vectors same as in Section IV-E, is set to be 20.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-119",
+      "order": 119,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Both MOEA/D and NSGA-II have been run 30 times independently for each test instance.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-120",
+      "order": 120,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "F. Experimental Results Table V presents the average CPU time used by each algorithm for each test instance. It is clear from Table V that, on average, MOEA/D runs about twice as fast as NSGA-II with the same number of function evaluations for the 2-objective test instances, and more than 8 times for the 3-objective test instances. This observation is consistent with our complexity analysis in Section V-D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-121",
+      "order": 121,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "-metric and -metric to As in the MOKP, we use both the compare the performances of these two algorithms. To compute -metric values, is chosen to be a set of 500 uniformly distributed points in the PF for all the 2-objective test instances, and 990 points for 3-objective instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-122",
+      "order": 122,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "The number of function evaluations matters when the objective functions are very costly to evaluate. Fig. 6 presents the -metric value of the current populaevolution of the average with the number of function evaluations in each algotion to rithm for each test instance. These results indicate that MOEA/D converges, in terms of the number of the function evaluations, -metric value much faster than NSGA-II in minimizing the for ZDT4, ZDT6, DTLZ1 and DTLZ2, and at the about same speed as or a bit slower than NSGA-II for the other three test instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-123",
+      "order": 123,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "-metric, the ﬁnal solutions Table VI shows that in terms of obtained by MOEA/D is better than those obtained by NSGA-II for all the test instances but ZDT4.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-124",
+      "order": 124,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION Fig. 4. Plots of the nondominated solutions with the lowest D-metric in 30 runs of MOEA/D and MOGLS with the weighted sum approach for all the 2-objective MOKP test instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-125",
+      "order": 125,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Table VII presents the mean and standard deviation of -metric value of the ﬁnal solutions obtained by each algorithm for each test instance. This table reveals that in terms of Fig. 5. Plots of the nondominated solutions with the lowest D-metric in 30 runs of MOEA/D and MOGLS with the Tchebycheff approach for all the 2-objective MOKP test instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-126",
+      "order": 126,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "-metric, the ﬁnal solutions obtained by MOEA/D is better than NSGA-II for ZDT4, ZDT6 and the two 3-objective instances, and slightly worse for other three instances. Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 TABLE V AVERAGE CPU TIME (IN SECONDS) USED BY NSGA-II AND MOEA/D WITH THE TCHEBYCHEFF APPROACH TABLE VI AVERAGE SET COVERAGE BETWEEN MOEA/D WITH THE TCHEBYCHEFF APPROACH (A) AND NSGA-II (B) TABLE VII D-METRIC VALUES OF THE SOLUTIONS FOUND BY MOEA/D WITH THE TCHEBYCHEFF APPROACH AND NSGA-II. THE NUMBERS IN PARENTHESES REPRESENT THE STANDARD DEVIATION Figs. 7 and 8 show in the objective space, the distribution of -value the ﬁnal solutions obtained in the run with the lowest of each algorithm for each test instance. It is evident that as to the uniformness of ﬁnal solutions, MOEA/D is better than NSGA-II for ZDT1, ZDT2, ZDT6, and the two 3-objective test instances; it is about the same as NSGA-II for ZDT4, and worse than NSGA-II for ZDT3, on which MOEA/D found fewer solutions than NSGA-II in the two left segments of the PF. The poor performance of MOEA/D on ZDT3 could be attributed to the fact that the objectives in ZDT3 are disparately scaled. We can conclude from the above results that MOEA/D with the Tchebycheff approach needs less CPU time than NSGA-II with the same number of function evaluations for these test instances. In terms of the solution quality, these two algorithms have about the same performance on the 2-objective test instances, but MOEA/D is better than NSGA-II on the two 3-objective instances.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-127",
+      "order": 127,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "G. A Bit More Effort on MOEA/D In the above experiments, we used a very naive implementation of MOEA/D. The decomposition method is the classic Tchebycheff approach. We did not perform any objective normalization.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-128",
+      "order": 128,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "As mentioned in Section II-C, the Tchebycheff approach may perform worse, in terms of solution uniformness, than BI approaches, particularly when the number of objectives is more than two. It is also well-known that objective normalization is very useful for increasing the solution uniformness when the objectives are disparately scaled.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-129",
+      "order": 129,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Revisiting Figs. 7 and 8, one may not be quite satisﬁed with the uniformness in the solutions found by the above implementation of MOEA/D for ZDT3, DTLZ1, and DTLZ2. Note that the two objectives in ZDT3 are disparately scaled, and DTLZ1 and DTLZ2 have three objectives, two questions naturally arise. • Can MOEA/D with other advanced decomposition methods such as the PBI approach ﬁnd more evenly distributed solutions for 3-objective test instances like DTLZ1 and 2?",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-130",
+      "order": 130,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "• Can MOEA/D with objective normalization perform better in the case of disparately scaled objectives as in ZDT3? We have performed some experiments to study these two issues. In the following, we report our experimental results. MOEA/D With the PBI Approach:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-131",
+      "order": 131,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "We have tested MOEA/D with the PBI approach on the two 3-objective test is set instances. In our experiment, the penalty factor in to be 5 and the other settings are exactly the same as in the implementation of MOEA/D with the Tchebycheff approach in the above subsection.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-132",
+      "order": 132,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "-metric values of Table VIII compares the average NSGA-II and MOEA/D with two different decomposition approaches. Fig. 9 shows the distributions of the nondominated -metric values in 30 independent runs fronts with the lowest of MOEA/D with the PBI approach for two 3-objective test instances. It is very clear from these results and Fig. 8 that MOEA/D with the PBI approach performs much better than NSGA-II and MOEA/D with the Tchebycheff approach on these two 3-objective instances. These results suggest that incorporating other advanced decomposition approaches into MOEA/D would be worthwhile studying in solving MOPs with more than two objectives. We would like to point out that MOEA/D with advanced decomposition approaches may require a bit more human effort, for example, to set the value of the penalty factor in the PBI approach.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-133",
+      "order": 133,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "2) Objective Normalization: We still use the Tchebycheff approach and do not change the parameter settings in the following experiments. However, we incorporate a simple objective normalization technique into MOEA/D to study if the performance can be improved in the case of disparately scaled objectives.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-134",
+      "order": 134,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "A lot of effort has been made on the issue of objective normalization in the communities of both mathematical programming and evolutionary computation [1], [35], [36]–[38]. A very simple normalization method is to replace objective ) by10 where , as in Section II, is the reference point, is the nadir point in the 10Here, we assume that the goal of (1) is minimization.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-135",
+      "order": 135,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION Fig. 6. The evolution of D-metric value in both NSGA-II and MOEA/D with the Tchebycheff approach for each test instance. objective space, i.e., . In other deﬁnes the upper bound of PF, the Pareto front.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-136",
+      "order": 136,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "words, In such a way, the range of each objective in the PF becomes [0, 1].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-137",
+      "order": 137,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 Fig. 7. Plot of the nondominated front with the lowest D-metric value found by NSGA-II and MOEA/D with the Tchebycheff approach for each 2-objective test instance. The left panel is for MOEA/D and the right panel for NSGA-II. Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION Fig. 8. Plot of the nondominated front with the lowest D-metric value found by NSGA-II and MOEA/D with the Tchebycheff approach for each 3-objective test instance. The left panel is for MOEA/D and the right panel for NSGA-II. It is not easy or necessary to compute beforehand.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-138",
+      "order": 138,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": ",11 and each In our implementation, we replace , the largest value of in the current population. Therefore, in Step 2.4 of MOEA/D with the Tchebycheff approach for conis replaced by tinuous MOPs, (10) We have tested MOEA/D with the Tchebycheff approach and the above normalization technique on ZDT3 and a modiﬁed veris replaced by such that the sion of ZDT1 in which two objectives are disparately scaled. Fig. 10 plots the nondominated solutions obtained by a single run of MOEA/D with and without normalization for the modiﬁed version of ZDT1. Fig. 11 shows the nondominated solutions obtained by a single run of MOEA/D with normalization for ZDT3.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-139",
+      "order": 139,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "11Please refer to the description of MOEA/D for the details of initialization and update of z.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-140",
+      "order": 140,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "Figs. 10 and 11, together with the plots of the solutions found by NSGA-II and MOEA/D without normalization for ZDT3, clearly indicate that normalization does improve MOEA/D signiﬁcantly, in terms of uniformness, in the case of disparately scaled objectives.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-141",
+      "order": 141,
+      "section": "C. Variant of MOEA/D Used in Comparison",
+      "level": "section",
+      "type": "",
+      "text": "In summary, we have very positive answers to the two questions raised at the outset of this subsection. Using other sophisticated decomposition and normalization techniques in MOEA/D will be our future research topics.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-142",
+      "order": 142,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "IN MOEA/D A. Sensitivity of in MOEA/D is a major control parameter in MOEA/D. To study the senin MOEA/D for both continsitivity of the performance to uous and discrete MOPs, we have tested different settings of in the implementation of MOEA/D with the weighted sum approach in Section IV for knapsack instance 250–2, and the implementation of MOEA/D with the Tchebycheff approach in Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 Fig. 9. Plot of the nondominated fronts with the lowest D-metric values in MOEA/D with the PBI approach for two 3-objective test instances. TABLE VIII COMPARISON OF AVERAGE D-METRIC VALUES OF THE SOLUTIONS FOUND BY NSGA-II, AND MOEA/D WITH THE TCHEBYCHEFF AND PBI APPROACHES. THE NUMBERS IN PARENTHESES REPRESENT THE STANDARD DEVIATION Section V for ZDT1. All the parameter settings are the same as . As clearly in Sections IV-E and V-E, except the settings of from 10 shown in Fig. 12, MOEA/D performs very well with to 50 on knapsack instance 250–2, and it works very well for all except very small ones on ZDT1. Thus, we can the values of , at claim that MOEA/D is not very sensitive to the setting of least for MOPs that are somehow similar to these test instances. Fig. 12 also reveals that MOEA/D does not work well on both instances when is very small. This could be due to what was mentioned in Section III-B3, MOEA/D with too small works poor at exploration. The fact that MOEA/D with large poorly on knapsack instance 250–2 could be explained by our Fig. 10. Plot of the nondominated fronts found by MOEA/D with and without is replaced by 10f normalization for the modiﬁed version of ZDT1 in which f Fig. 11. Plot of the nondominated front found by MOEA/D with normalization for ZDT3.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-143",
+      "order": 143,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "analysis in Section III-B3 since the solutions to two subproblems with very different weight vectors are far different in this Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION Fig. 12. The average D-metric value versus the value of T in MOEA/D for knapsack instance 2–250 and ZDT1.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-144",
+      "order": 144,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "instance. The reason that MOEA/D with large performs well on ZDT1 could be because even if two weight vectors are different, the optimal solutions to their associated subproblems are very similar, in fact, they are the same in all the components except the ﬁrst one.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-145",
+      "order": 145,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "B. MOEA/D Using Small Population As mentioned in Section I, a decision maker may not want to have a huge number of Pareto optimal solutions at high computational cost. They are often interested in obtaining a small number of evenly distributed solutions at low computational cost. In the following, we will show that MOEA/D using small population could serve this purpose. We take ZDT1 as an example and use MOEA/D with the Tchebycheff approach in Section V. All the parameter settings are the same as in . For comparison, Section V except the population size on ZDT1. Both algorithms we also run NSGA-II with stop after 250 generations as in Section V.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-146",
+      "order": 146,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "Fig. 13 plots the ﬁnal solutions obtained in a single run of NSGA-II and MOEA/D with . It is evident that MOEA/D found 20 very evenly distributed Pareto solutions, Fig. 13. Plot of the nondominated fronts found by MOEA/D and NSGA-II using small population (N = 20).",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-147",
+      "order": 147,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "Fig. 14. The average numbers of function evaluations used for reducing the D-metric value under 0.005 for ZDT1 with different numbers of decision variables.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-148",
+      "order": 148,
+      "section": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+      "level": "section",
+      "type": "",
+      "text": "while NSGA-II failed in reaching the PF within the given number of generations. Clearly, this advantage of MOEA/D comes from its decomposition strategy.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-149",
+      "order": 149,
+      "section": "C. Scalability",
+      "level": "section",
+      "type": "",
+      "text": "To study how the computational cost, in terms of the number of function evaluations, increase as the number of decision variable increases, we have tried, on ZDT1 with different numbers of decision variables, the variant of MOEA/D in Section V-C, with the same parameter settings except the maximal number of generation is 1000 (i.e., the maximal number of function evalu- ). We have found that in every run ations is among 30 independent runs for each number of decision variables, MOEA/D has lowered the -metric value blow 0.005, therefore the ﬁnal solutions are a very good approximation to the PF by our experience in Section V. Fig. 14 gives the average Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, VOL. 11, NO. 6, DECEMBER 2007 numbers of function evaluations used for reducing the -metric value under 0.005 for ZDT1 with different numbers of decision variables. It is evident that the average number of function evaluations linearly scales up, as the number of decision variables increases.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-150",
+      "order": 150,
+      "section": "C. Scalability",
+      "level": "section",
+      "type": "",
+      "text": "The linear salability of MOEA/D in this test instance should be due to two facts: 1) The number of scalar optimization subproblems in MOEA/D is ﬁxed to be 100, no matter how many the decision variables are. One does not need to increase the number of subproblems as the number of decision variables increases since the intrinsic dimensionality of a MOP is determined by its number of objectives, but not its number of decision variables [1], [39]. 2) The complexity of each scalar optimization could scale up linearly with the number of decision variables.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-151",
+      "order": 151,
+      "section": "VII. CONCLUSION",
+      "level": "section",
+      "type": "",
+      "text": "Decomposition was widely used in traditional mathematical programming methods for solving MOPs. In contrast, most MOEAs treat a MOP as a whole and mainly rely on domination for measuring the solution quality during their search. These algorithms may not be very good at generating an even distribution of solutions along the PF.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-152",
+      "order": 152,
+      "section": "VII. CONCLUSION",
+      "level": "section",
+      "type": "",
+      "text": "This paper has proposed a simple and generic evolutionary multiobjective optimization algorithm based on decomposition, called MOEA/D. It ﬁrst uses a decomposition method to decompose the MOP into a number of scalar optimization problems. Then, an EA is employed for optimizing these subproblems simultaneously. Each individual solution in the population of MOEA/D is associated with a subproblem. A neighborhood relationship among all the subproblems is deﬁned based on the distances of their weight vectors. In MOEA/D, optimization of a subproblem uses the current information of its neighboring subproblems since two neighboring subproblems should have close optimal solutions. We have compared MOEA/D with MOGLS and NSGA-II on multiobjective knapsack problems and continuous multiobjective problems, respectively. Our analysis has shown that MOEA/D has lower computational complexity than MOGLS and NSGA-II, and the experimental results have also conﬁrmed it. In terms of solution quality, MOEA/D with simple decomposition methods have outperformed or performed similarly to MOGLS and NSGA-II on most test instances. We have shown that MOEA/D with the PBI approach is able to generate a very uniform distribution of representative Pareto optimal solutions on the PF on two continuous 3-objective test instances. We have also demonstrated that MOEA/D with a naive objective normalization technique can deal with disparately scaled objectives very well. These results suggest that more efﬁcient and effective implementations of MOEA/D could be obtained if more effort is made.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-153",
+      "order": 153,
+      "section": "VII. CONCLUSION",
+      "level": "section",
+      "type": "",
+      "text": "We have experimentally investigated the scalability and the of MOEA/D. We have sensitivity to the neighborhood size found that the computational cost linearly scales up with the number of decision variables, and MOEA/D is not very sensitive . We have also shown that MOEA/D is good at to the setting of ﬁnding a small number of uniformly distributed Pareto solutions at low computational cost.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-154",
+      "order": 154,
+      "section": "VII. CONCLUSION",
+      "level": "section",
+      "type": "",
+      "text": "Combination of mathematical programming methods and EAs has been proven to be very successful in scalar optimization problems. Our work in this paper provides a very natural way for introducing decomposition strategies, which have been studied in the community of mathematical programming for a long time, into EAs for multiobjective optimization. New developments in decomposition strategies and other techniques in scalar optimization techniques can be readily integrated with EAs in the framework of MOEA/D.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-155",
+      "order": 155,
+      "section": "ACKNOWLEDGMENT",
+      "level": "section",
+      "type": "",
+      "text": "The authors are grateful to X. Yao, the anonymous associate editor, and anonymous referees for their insightful comments. They also thank A. Zhou and S. Lucas for his help on this work.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-156",
+      "order": 156,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[1] K. Miettinen, Nonlinear Multiobjective Optimization. Norwell, MA:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-157",
+      "order": 157,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Kluwer, 1999. [2] K. Deb, Multi-Objective Optimization using Evolutionary Algorithms.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-158",
+      "order": 158,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "New York: Wiley, 2001. [3] C. A. C. Coello, D. A. V. Veldhuizen, and G. B. Lamont, Evolutionary Algorithms for Solving Multi-Objective Problems.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-159",
+      "order": 159,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Norwell, MA: Kluwer, 2002. [4] K. Tan, E. Khor, and T. Lee, Multiobjective Evolutionary Algorithms and Applications, ser. Advanced Information and Knowledge Processing.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-160",
+      "order": 160,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Berlin, Germany: Springer-Verlag, 2005. [5] E. Polak, “On the approximation of solutions to multiple criteria decision making problems,” in Multiple Criteria Decision Making, M. Zeleny, Ed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-161",
+      "order": 161,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Berlin, Germany: Springer-Verlag, 1976, vol. 123, Lecture Notes in Economics and Mathematical Systems, pp. 271–282. [6] S. Helbig, “On a constructive approximation of the efﬁcient outcomes in bicriterion vector optimization,” J. Global Optim., vol. 5, pp. 35–48, 1994.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-162",
+      "order": 162,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[7] M. Wiecek, W. Chen, and J. Zhang, “Piecewise quadratic approximation of the non-dominated set for bi-criteria programs,” J. Multi-Criteria Decision Analysis, vol. 10, no. 1, pp. 35–47, 2001.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-163",
+      "order": 163,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[8] S. Ruzika and M. Wiecek, “Approximation methods in multiobjective programming,” J. Optim. Theory Appl., vol. 126, no. 3, pp. 473–501, Sep. 2005.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-164",
+      "order": 164,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[9] I. Das and J. E. Dennis, “Normal-bounday intersection: A new method for generating Pareto optimal points in multicriteria optimization problems,” SIAM J. Optim., vol. 8, no. 3, pp. 631–657, Aug. 1998. [10] A. Messac, A. Ismail-Yahaya, and C. Mattson, “The normalized normal constraint method for generating the Pareto frontier,” Struct Multidisc. Optim., vol. 25, pp. 86–98, 2003.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-165",
+      "order": 165,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[11] C. A. Mattson, A. A. Mullur, and A. Messac, “Smart Pareto ﬁlter: Obtaining a minimal representation of multiobjective design space,” Eng. Optim., vol. 36, no. 6, pp. 721–740, 2004.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-166",
+      "order": 166,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[12] C. A. C. Coello, “An updated survey of GA-based multiobjective optimization techniques,” ACM Comput. Surv., vol. 32, no. 2, pp. 109–143, 2000.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-167",
+      "order": 167,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[13] E. Zitzler and L. Thiele, “Multiobjective evolutionary algorithms: A comparative case study and the strength Pareto approach,” IEEE Trans. Evol. Comput., vol. 3, no. 4, pp. 257–271, Nov. 1999.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-168",
+      "order": 168,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[14] J. D. Knowles and D. W. Corne, “The Pareto archived evolution strategy: A new baseline algorithm for multiobjective optimisation,” in Proc. Congr. Evol. Comput., Washington, D.C., Jul. 1999, pp. 98–105. [15] E. Zitzler, M. Laumanns, and L. Thiele, “SPEA2: Improving the strength Pareto evolutionary algorithm for multiobjective optimization,” in Proc. Evolutionary Methods for Design Optimization and Control with Applications to Industrial Problems, K. C. Giannakoglou, D. T. Tsahalis, J. Périaux, K. D. Papailiou, and T. Fogarty, Eds., Athens, Greece, pp. 95–100.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-169",
+      "order": 169,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[16] K. Deb, S. Agrawal, A. Pratap, and T. Meyarivan, “A fast and elitist multiobjective genetic algorithm: NSGA-II,” IEEE Trans. Evol. Comput., vol. 6, no. 2, pp. 182–197, Apr. 2002.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-170",
+      "order": 170,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[17] H. Lu and G. G. Yen, “Rank-density-based multiobjective genetic algorithm and benchmark test function study,” IEEE Trans. Evol. Comput., vol. 7, no. 4, pp. 325–343, Aug. 2003.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-171",
+      "order": 171,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply. ZHANG AND LI: MOEA/D: A MULTIOBJECTIVE EVOLUTIONARY ALGORITHM BASED ON DECOMPOSITION [18] T. Okabe, Y. Jin, B. Sendhoff, and M. Olhofer, “Voronoi-based estimation of distribution algorithm for multi-objective optimization,” in Congress on Evolutionary Computation (CEC), Y. Shi, Ed. Piscataway, NJ: IEEE Press, 2004, pp. 1594–1602.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-172",
+      "order": 172,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[19] C. A. C. Coello, G. T. Pulido, and M. S. Lechuga, “Handling multiple objectives with particle swarm optimization,” IEEE Trans. Evol. Comput., vol. 8, no. 3, pp. 256–279, Jun. 2004.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-173",
+      "order": 173,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[20] D. A. V. Veldhuizen and G. B. Lamont, “Multiobjective evolutionary algorithms: Analyzing the state-of-the-art,” Evol. Comput., vol. 8, no. 2, pp. 125–147, 2000.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-174",
+      "order": 174,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[21] J. D. Knowles and D. Corne, “Properties of an adaptive archiving algorithm for storing nondominated vectors,” IEEE Trans. Evol. Comput., vol. 7, no. 2, pp. 100–116, Apr. 2003.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-175",
+      "order": 175,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[22] Q. Zhang, A. Zhou, and Y. Jin, “Modelling the regularity in an estimation of distribution algorithm for continuous multiobjective optimisation with variable linkages,” Dept. Comput. Sci., Univ. Essex, Colchester, U.K., Tech. Rep. CSM-459, 2006, (a revised version of this paper has been accepted for publication by the IEEE Trans. Evol. Comput., 2007).",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-176",
+      "order": 176,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[23] P. A. N. Bosman and D. Thierens, “The balance between proximity and diversity in multiobjective evolutionary algorithms,” IEEE Trans. Evol. Comput., vol. 7, no. 2, pp. 174–188, Apr. 2003.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-177",
+      "order": 177,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[24] J. D. Schaffer, “Multiple objective optimization with vector evaluated genetic algorithms,” in Proc. 1st Int. Conf. Genetic Algorithms, 1985, pp. 93–100.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-178",
+      "order": 178,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[25] L. Paquete and T. Stützle, “A two-phase local search for the biobjective traveling salesman problem,” in Proc. Evol. Multi-Criterion Optim., 2003, pp. 479–493.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-179",
+      "order": 179,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[26] E. J. Hughes, “Multiple single objective Pareto sampling,” in Proc. Congr. Evol. Comput., Canberra, Australia, 2003, pp. 2678–2684. [27] Y. Jin, T. Okabe, and B. Sendhoff, “Adapting weighted aggregation for multiobjective evolutionary strategies,” in Evolutionary Multicriterion Optimization.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-180",
+      "order": 180,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": ": Springer, 2001, vol. 1993, LNCS, pp. 96–110.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-181",
+      "order": 181,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[28] H. Ishibuchi and T. Murata, “Multi-objective genetic local search algorithm and its application to ﬂowshop scheduling,” IEEE Trans. Syst., Man, Cybern., vol. 28, pp. 392–403, Aug. 1998.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-182",
+      "order": 182,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[29] A. Jaszkiewicz, “On the performance of multiple-objective genetic local search on the 0/1 knapsack problem – A comparative experiment,” IEEE Trans. Evol. Comput., vol. 6, no. 4, pp. 402–412, Aug. 2002.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-183",
+      "order": 183,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[30] Q. Zhang and Y. W. Leung, “Orthogonal genetic algorithm for multimedia multicast routing,” IEEE Trans. Evol. Comput., vol. 3, no. 1, pp. 53–62, Apr.l 1999.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-184",
+      "order": 184,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[31] N. J. W. T. J. Santers and W. I. Notz, The Design of Analysis of Computer Experiments.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-185",
+      "order": 185,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Berlin, Germany: Springer-Verlag, 2003. [32] E. Zitzler, L. Thiele, M. Laumanns, C. M. Fonseca, and V. G. da Fonseca, “Performance assessment of multiobjective optimizers: An analysis and review,” IEEE Trans. Evol. Comput., vol. 7, no. 2, pp. 117–132, Apr. 2003.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-186",
+      "order": 186,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[33] E. Zitzler, K. Deb, and L. Thiele, “Comparison of multiobjective evolutionary algorithms: Empirical results,” Evol. Comput., vol. 8, no. 2, pp. 173–195, 2000.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-187",
+      "order": 187,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[34] K. Deb, L. Thiele, M. Laumanns, and E. Zitzler, “Scalable multiobjective optimization test problems,” in Proc. Congr. Evol. Comput., May 2002, vol. 1, pp. 825–830.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-188",
+      "order": 188,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[35] R. E. Steuer, Multiple Criteria Optimization: Theory, Computation and Application.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-189",
+      "order": 189,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "New York: Wiley, 1986. [36] M. Gen and R. Cheng, Genetic Algorithms and Engineering Design. New York: Wiley, 1997.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-190",
+      "order": 190,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[37] P. J. Bentley and J. P. Wakeﬁeld, “Finding acceptable solutions in the Pareto-optimal range using multiobjective genetic algorithms,” in Proc. 2nd On-Line World Conf. Soft Comput. Eng. Design Manuf., Jun. 1997, pp. 231–240.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-191",
+      "order": 191,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[38] I. C. Parmee and D. Cvetkovic, “Preferences and their application in evolutionary multiobjective optimization,” IEEE Trans. Evol. Comput., vol. 6, no. 1, pp. 42–57, Feb. 2002.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-192",
+      "order": 192,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "[39] M. Ehrgott, Multicriteria Optimization, 2nd ed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-193",
+      "order": 193,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Berlin, Germany: Springer-Verlag, 2005. [40] T. Murata, H. Ishibuchi, and M. Gen, “Speciﬁcation of Genetic Search Direction in Cellular Multiobjective Genetic Algorithm,” in Evolutionary Multicriterion Optimization.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-194",
+      "order": 194,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Berlin, Germany: Springer-Verlag, 2001, LNCS1993, pp. 82–95.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-195",
+      "order": 195,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Qingfu Zhang (M’01–SM’06) received the B.Sc.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-196",
+      "order": 196,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "degree in mathematics from Shanxi University, Shanxi, China, in 1984, the M.Sc. degree in applied mathematics and the Ph.D. degree in information engineering from Xidian University, Xi’an, China, in 1991 and 1994, respectively.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-197",
+      "order": 197,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "He is currently a Reader in the Department of Computer Science, University of Essex, Colchester, U.K. Before joining the University of Essex in 2000, he was with the National Laboratory of Parallel Processing and Computing at the National University of Defence Science and Technology (China), Hong Kong Polytechnic University (Hong Kong), the German National Research Centre for Information Technology (now Fraunhofer–Gesellschaft, Germany) and the University of Manchester Institute of Science and Technology (U.K.). His main research areas are evolutionary computation, optimization, neural networks, data analysis and their applications.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-198",
+      "order": 198,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Dr. Zhang is an Associate Editor of the IEEE TRANSACTIONS ON SYSTEMS, MAN, AND CYBERNETICS—PART B and a Guest Editor of a forthcoming Special Issue on Evolutionary Algorithms Based on Probabilistic Models in the IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-199",
+      "order": 199,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Hui Li received the B.Sc. and M.Sc degrees in applied mathematics from Xi’an Jiaotong University, Xi’an, China, in 1999 and 2002, respectively. He is currently working towards the Ph.D. degree in computer science at the University of Essex, Colchester, U.K.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-200",
+      "order": 200,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "His main research areas are evolutionary computation, multiobjective optimization, metaheuristics, and portfolio optimization.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-201",
+      "order": 201,
+      "section": "REFERENCES",
+      "level": "section",
+      "type": "",
+      "text": "Authorized licensed use limited to: SHENZHEN UNIVERSITY. Downloaded on March 05,2024 at 07:32:35 UTC from IEEE Xplore. Restrictions apply.",
+      "summary": "",
+      "figureRefs": []
+    }
+  ],
+  "readingPlan": {
+    "totalSegments": 201,
+    "totalChars": 72032,
+    "sections": [
+      {
+        "title": "（正文）",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 76,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "Based on Decomposition",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 45,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "Abstract—Decomposition is a basic strategy in traditional mul-",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 1199,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "Index Terms—Computational complexity, decomposition, evolu-",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 66,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "I. INTRODUCTION",
+        "segments": 15,
+        "children": [],
+        "appendix": false,
+        "chars": 8603,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "II. DECOMPOSITION OF MULTIOBJECTIVE OPTIMIZATION",
+        "segments": 4,
+        "children": [],
+        "appendix": false,
+        "chars": 2128,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "C. Boundary Intersection (BI) Approach",
+        "segments": 11,
+        "children": [],
+        "appendix": false,
+        "chars": 3632,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "III. THE FRAMEWORK OF MULTIOBJECTIVE EVOLUTIONARY",
+        "segments": 18,
+        "children": [],
+        "appendix": false,
+        "chars": 7375,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "C. Variants of MOEA/D",
+        "segments": 5,
+        "children": [],
+        "appendix": false,
+        "chars": 1578,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "IV. COMPARISON WITH MOGLS",
+        "segments": 13,
+        "children": [],
+        "appendix": false,
+        "chars": 4953,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "C. Multiobjective 0–1 Knapsack Problem",
+        "segments": 9,
+        "children": [],
+        "appendix": false,
+        "chars": 2243,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "1. Randomly generate a weight vector",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 47,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "2. Randomly generate a solution",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 41,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "3. Taking",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 301,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "4. Add",
+        "segments": 18,
+        "children": [],
+        "appendix": false,
+        "chars": 7145,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "V. COMPARISON WITH NSGA-II ON CONTINUOUS MOPS",
+        "segments": 10,
+        "children": [],
+        "appendix": false,
+        "chars": 2049,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "C. Variant of MOEA/D Used in Comparison",
+        "segments": 31,
+        "children": [],
+        "appendix": false,
+        "chars": 12831,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "VI. SCALABILITY, SENSITIVITY, AND SMALL POPULATION",
+        "segments": 7,
+        "children": [],
+        "appendix": false,
+        "chars": 3841,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "C. Scalability",
+        "segments": 2,
+        "children": [],
+        "appendix": false,
+        "chars": 1694,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "VII. CONCLUSION",
+        "segments": 4,
+        "children": [],
+        "appendix": false,
+        "chars": 2809,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "ACKNOWLEDGMENT",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 185,
+        "role": "跳过",
+        "priority": "skip"
+      },
+      {
+        "title": "REFERENCES",
+        "segments": 46,
+        "children": [],
+        "appendix": false,
+        "chars": 9191,
+        "role": "跳过",
+        "priority": "skip"
+      }
+    ],
+    "summary": {
+      "coreSegments": 154,
+      "skimSegments": 0,
+      "optionalSegments": 0,
+      "skipSegments": 47,
+      "minCallsIfCoreOnly": 154,
+      "minCallsIfAll": 201
+    }
+  },
+  "parseQuality": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "章节数",
+        "value": 22,
+        "threshold": ">= 4",
+        "pass": true
+      },
+      {
+        "name": "段落中位数",
+        "value": 258,
+        "threshold": "50 ~ 1500 字符",
+        "pass": true
+      },
+      {
+        "name": "超长段落",
+        "value": "0.0%",
+        "threshold": "> 4000 字符的段落 <= 10%",
+        "pass": true
+      },
+      {
+        "name": "表格残渣",
+        "value": 0,
+        "threshold": "== 0",
+        "pass": true
+      },
+      {
+        "name": "悬空引用",
+        "value": 0,
+        "threshold": "<= 2",
+        "pass": true
+      }
+    ],
+    "stats": {
+      "segments": 201,
+      "sections": 22,
+      "formulas": 0,
+      "figures": 0,
+      "tables": 0,
+      "tablesWithRows": 0,
+      "algorithms": 0,
+      "labels": 0,
+      "refs": 0,
+      "chars": 72032,
+      "medianPara": 258,
+      "dirtyParagraphs": 0
+    },
+    "danglingRefs": [],
+    "sourceNote": "PDF 解析（非 LaTeX 源码）。公式与表格的还原度低于 arXiv 路径。"
+  }
+}

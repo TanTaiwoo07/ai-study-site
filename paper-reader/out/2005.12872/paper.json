@@ -1,0 +1,1714 @@
+{
+  "id": "arxiv-2005.12872",
+  "sourceType": "latex",
+  "meta": {
+    "title": "End-to-End Object Detection with Transformers",
+    "authors": [
+      "Nicolas Carion",
+      "Gabriel Synnaeve",
+      "Nicolas Usunier",
+      "Alexander Kirillov",
+      "Sergey Zagoruyko"
+    ],
+    "abstract": "We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR , are a set-based global loss that forces unique predictions\n via bipartite matching, \n and a transformer encoder-decoder architecture. Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. \n The new model is conceptually simple and does not require a specialized library, unlike many other modern detectors.\n DETR \n demonstrates accuracy and run-time performance on par with the\n well-established and highly-optimized Faster R-CNN baseline on the challenging\n COCO object detection dataset. \n Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines.\n Training code and pretrained models are available at .",
+    "rawAuthor": "Nicolas Carion\\thanks{Equal contribution} \\and Francisco Massa \\textsuperscript{\\@fnsymbol{1}} \\and Gabriel Synnaeve \\and Nicolas Usunier \\and Alexander Kirillov \\and Sergey Zagoruyko",
+    "arxivId": "2005.12872",
+    "version": "",
+    "year": null,
+    "venue": "",
+    "peerReviewed": false
+  },
+  "map": {
+    "problem": "",
+    "claims": [],
+    "methodSteps": [],
+    "experiments": "",
+    "conclusions": [],
+    "limitations": []
+  },
+  "outline": [
+    {
+      "level": "section",
+      "title": "Introduction",
+      "segments": 7
+    },
+    {
+      "level": "section",
+      "title": "Related work",
+      "segments": 1
+    },
+    {
+      "level": "subsection",
+      "title": "Set Prediction",
+      "segments": 2
+    },
+    {
+      "level": "subsection",
+      "title": "Transformers and Parallel Decoding",
+      "segments": 4
+    },
+    {
+      "level": "subsection",
+      "title": "Object detection",
+      "segments": 8
+    },
+    {
+      "level": "section",
+      "title": "Related Work",
+      "segments": 1
+    },
+    {
+      "level": "subsection",
+      "title": "Set Prediction",
+      "segments": 2
+    },
+    {
+      "level": "subsection",
+      "title": "Transformers and Parallel Decoding",
+      "segments": 4
+    },
+    {
+      "level": "subsection",
+      "title": "Object detection",
+      "segments": 8
+    },
+    {
+      "level": "section",
+      "title": "The DETR model",
+      "segments": 1
+    },
+    {
+      "level": "subsection",
+      "title": "Object detection set prediction loss",
+      "segments": 8
+    },
+    {
+      "level": "subsection",
+      "title": "DETR architecture",
+      "segments": 8
+    },
+    {
+      "level": "subsection",
+      "title": "Extending DETR to higher resolution feature maps",
+      "segments": 1
+    },
+    {
+      "level": "section",
+      "title": "Experiments",
+      "segments": 2
+    },
+    {
+      "level": "subsection",
+      "title": "Comparison with Faster R-CNN",
+      "segments": 1
+    },
+    {
+      "level": "subsection",
+      "title": "Ablations",
+      "segments": 9
+    },
+    {
+      "level": "subsection",
+      "title": "Analysis",
+      "segments": 2
+    },
+    {
+      "level": "subsection",
+      "title": "DETR for panoptic segmentation",
+      "segments": 6
+    },
+    {
+      "level": "section",
+      "title": "Conclusion",
+      "segments": 2
+    },
+    {
+      "level": "section",
+      "title": "Acknowledgements",
+      "segments": 1
+    },
+    {
+      "level": "section",
+      "title": "Appendix",
+      "segments": 0
+    },
+    {
+      "level": "subsection",
+      "title": "Preliminaries: Multi-head attention layers",
+      "segments": 9
+    },
+    {
+      "level": "subsection",
+      "title": "Losses",
+      "segments": 6
+    },
+    {
+      "level": "subsection",
+      "title": "Detailed architecture",
+      "segments": 2
+    },
+    {
+      "level": "subsection",
+      "title": "Training hyperparameters",
+      "segments": 3
+    },
+    {
+      "level": "subsection",
+      "title": "Additional results",
+      "segments": 5
+    },
+    {
+      "level": "subsection",
+      "title": "PyTorch inference code",
+      "segments": 1
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg-001",
+      "order": 1,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "The goal of object detection is to predict a set of bounding boxes and category labels for each object of interest.\nModern detectors address this set prediction task in an indirect way, by defining surrogate regression and classification problems on a large set of proposals [cite:Ren2015FasterRT,Cai2019CascadeRH], anchors [cite:Lin2017FocalLF], or window centers [cite:Zhou2019objects,tian2019fcos].\nTheir performances are significantly influenced by postprocessing steps to collapse near-duplicate predictions, by the design of the anchor sets and by the heuristics that assign target boxes to anchors [cite:Zhang2019bridging].\nTo simplify these pipelines, we propose a direct set prediction approach to bypass the surrogate tasks. \nThis end-to-end philosophy has led to significant advances in complex structured prediction tasks such as machine translation or speech recognition, but not yet in object detection: previous attempts [cite:Stewart2015EndtoEndPD,Hosang2017LearningNS,Bodla2017SoftNMSI,rezatofighi2018deep] either add other forms of prior knowledge, or have not proven to be competitive with strong baselines on challenging benchmarks. This paper aims to bridge this gap.",
+      "summary": "",
+      "figureRefs": [],
+      "figures": [
+        {
+          "asset": "figures/DETR_fig1_seagulls",
+          "caption": "DETR directly predicts (in parallel)\n the final set of detections by combining a common CNN with a transformer architecture. During training, bipartite matching uniquely assigns predictions with ground truth boxes. Prediction with no match should yield a `` no object'' (⟨ ⟩) class prediction.",
+          "label": "fig:teaser"
+        }
+      ]
+    },
+    {
+      "id": "seg-002",
+      "order": 2,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "We streamline the training pipeline by viewing object detection as a direct set prediction problem. We adopt an encoder-decoder architecture based on transformers [cite:Vaswani2017AttentionIA], a popular architecture for sequence prediction. The self-attention mechanisms of transformers, which explicitly model all pairwise interactions between elements in a sequence, make these architectures particularly suitable for specific constraints of set prediction such as removing duplicate predictions.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-003",
+      "order": 3,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "Our DEtection TRansformer (DETR , see Figure [ref:fig:teaser]) predicts all objects at once, and is trained end-to-end with a set loss function which performs bipartite matching between predicted and ground-truth objects.\nDETR simplifies the detection pipeline by dropping multiple hand-designed components that encode prior knowledge, like spatial anchors or non-maximal suppression. \nUnlike most existing detection methods, DETR doesn't require any customized layers, and thus can be reproduced easily in any framework that contains standard CNN and transformer classes. .",
+      "summary": "",
+      "figureRefs": [
+        "fig:teaser"
+      ]
+    },
+    {
+      "id": "seg-004",
+      "order": 4,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "Compared to most previous work on direct set prediction, the main features of DETR are the conjunction of the bipartite matching loss and transformers with (non-autoregressive) parallel decoding [cite:oord2017parallel,Gu2017NonAutoregressiveNM,ghazvininejad2019constant,Devlin2019BERTPO]. In contrast, previous work focused on autoregressive decoding with RNNs [cite:Stewart2015EndtoEndPD,RomeraParedes2015RecurrentIS,Park2015LearningTD,ren2017end,Salvador2017RecurrentNN]. Our matching loss function uniquely assigns a prediction to a ground truth object, and is invariant to a permutation of predicted objects, so we can emit them in parallel.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-005",
+      "order": 5,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "We evaluate DETR on one of the most popular object detection datasets, COCO [cite:Lin2014coco], against a very competitive Faster R-CNN baseline [cite:Ren2015FasterRT]. Faster R-CNN has undergone many design iterations and its performance was greatly improved since the original publication. Our experiments show that our new model\nachieves comparable performances. More precisely, DETR demonstrates significantly better performance on large objects, a result likely enabled by the non-local computations of the transformer. It obtains, however, lower performances on small objects. We expect that future work will improve this aspect in the same way the development of FPN [cite:lin2017feature] did for Faster R-CNN.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-006",
+      "order": 6,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "Training settings for DETR differ from standard object detectors in multiple ways. The new model requires extra-long training schedule and benefits from auxiliary decoding losses in the transformer.\nWe thoroughly explore what components are crucial for the demonstrated performance.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-007",
+      "order": 7,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "The design ethos of DETR easily extend to more complex tasks. In our\nexperiments, we show that a simple segmentation head trained on top of a\npre-trained DETR outperfoms competitive baselines on Panoptic Segmentation [cite:Kirillov2019panoptic], a challenging pixel-level recognition task that has recently gained popularity.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-008",
+      "order": 8,
+      "section": "Related work",
+      "level": "section",
+      "type": "",
+      "text": "Our work build on prior work in several domains: bipartite matching losses for set prediction, encoder-decoder architectures based on the transformer, parallel decoding, and object detection methods.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-009",
+      "order": 9,
+      "section": "Set Prediction",
+      "level": "subsection",
+      "type": "",
+      "text": "There is no canonical deep learning model to directly predict sets. The basic set prediction task is multilabel classification (see e.g., [cite:rezatofighi2017deepsetnet,pineda2019ElucidatingIP] for references in the context of computer vision) for which the baseline approach, one-vs-rest, does not apply to problems such as detection where there is an underlying structure between elements (i.e., near-identical boxes). The first difficulty in these tasks is to avoid near-duplicates. Most current detectors use postprocessings such as non-maximal suppression to address this issue, but direct set prediction are postprocessing-free. They need global inference schemes that model interactions between all predicted elements to avoid redundancy. For constant-size set prediction, dense fully connected networks [cite:erhan2014scalable] are sufficient but costly. A general approach is to use auto-regressive sequence models such as recurrent neural networks [cite:vinyals2016order]. In all cases, the loss function should be invariant by a permutation of the predictions. The usual solution is to design a loss based on the Hungarian algorithm [cite:Kuhn1955TheHM], to find a bipartite matching between ground-truth and prediction. This enforces permutation-invariance, and guarantees that each target element has a unique match. We follow the bipartite matching loss approach. In contrast to most prior work however, we step away from autoregressive models and use transformers with parallel decoding, which we describe below.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-010",
+      "order": 10,
+      "section": "Transformers and Parallel Decoding",
+      "level": "subsection",
+      "type": "",
+      "text": "Transformers were introduced by Vaswani et al. [cite:Vaswani2017AttentionIA] as a new attention-based building block for machine translation. Attention mechanisms [cite:bahdanau2015neural] are neural network layers that aggregate information from the entire input sequence. Transformers introduced self-attention layers, which, similarly to Non-Local Neural Networks [cite:Wang2017NonlocalNN], scan through each element of a sequence and update it by aggregating information from the whole sequence. One of the main advantages of attention-based models is their global computations and perfect memory, which makes them more suitable than RNNs on long sequences. Transformers are now replacing RNNs in many problems in natural language processing, speech processing and computer vision [cite:Devlin2019BERTPO,Lscher2019RWTHAS,synnaeve2019end,Radford2019LanguageMA,Parmar2018ImageT].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-011",
+      "order": 11,
+      "section": "Transformers and Parallel Decoding",
+      "level": "subsection",
+      "type": "",
+      "text": "Transformers were first used in auto-regressive models, following early sequence-to-sequence models [cite:sutskever2014sequence], generating output tokens one by one. However, the prohibitive inference cost (proportional to output length, and hard to batch) lead to the development of parallel sequence generation, in the domains of audio [cite:oord2017parallel], machine translation [cite:Gu2017NonAutoregressiveNM,ghazvininejad2019constant], word representation learning [cite:Devlin2019BERTPO], and more recently speech recognition [cite:chan2020imputer]. We also combine transformers and parallel decoding for their suitable trade-off between computational cost and the ability to perform the global computations required for set prediction.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-012",
+      "order": 12,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "Most modern object detection methods make predictions relative to some initial guesses. Two-stage detectors [cite:Ren2015FasterRT,Cai2019CascadeRH] predict boxes with respect to proposals, whereas single-stage methods make predictions with respect to anchors [cite:Lin2017FocalLF] or a grid of possible object centers [cite:Zhou2019objects,tian2019fcos]. Recent work [cite:Zhang2019bridging] demonstrate that the final performance of these systems heavily depends on the exact way these initial guesses are set. In our model we are able to remove this hand-crafted process and streamline the detection process by directly predicting the set of detections with absolute box prediction with respect to the input image rather than an anchor.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-013",
+      "order": 13,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Set-based loss. \nSeveral object detectors [cite:erhan2014scalable,Liu2016SSDSS,redmon2016you] used the bipartite matching loss. However, in these early deep learning models, the relation between different prediction was modeled with convolutional or fully-connected layers only and a hand-designed NMS post-processing can improve their performance. More recent detectors [cite:Ren2015FasterRT,Lin2017FocalLF,Zhou2019objects] use non-unique assignment rules between ground truth and predictions together with an NMS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-014",
+      "order": 14,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "Learnable NMS methods [cite:Hosang2017LearningNS,Bodla2017SoftNMSI] and relation networks [cite:Hu2017RelationNF] explicitly model relations between different predictions with attention. Using direct set losses, they do not require any post-processing steps. However, these methods employ additional hand-crafted context features like proposal box coordinates to model relations between detections efficiently, while we look for solutions that reduce the prior knowledge encoded in the model.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-015",
+      "order": 15,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Recurrent detectors. \nClosest to our approach are end-to-end set predictions for object detection [cite:Stewart2015EndtoEndPD] and instance segmentation [cite:RomeraParedes2015RecurrentIS,Park2015LearningTD,ren2017end,Salvador2017RecurrentNN]. Similarly to us, they use bipartite-matching losses with encoder-decoder architectures based on CNN activations to directly produce a set of bounding boxes. These approaches, however, were only evaluated on small datasets and not against modern baselines. In particular, they are based on autoregressive models (more precisely RNNs), so they do not leverage the recent transformers with parallel decoding.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-016",
+      "order": 16,
+      "section": "Related Work",
+      "level": "section",
+      "type": "",
+      "text": "Our model builds on three main technical features: direct set prediction losses, transformers and parallel decoding for sequence prediction. We describe these three components first, and then put our work in the context of existing object detection approaches.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-017",
+      "order": 17,
+      "section": "Set Prediction",
+      "level": "subsection",
+      "type": "",
+      "text": "Learning with sets in machine learning has mostly been addressed when sets are inputs, searching for models that are permutation-invariant [cite:zaheer2017deep,lee2018set] or permutation-equivariant [cite:ravanbakhsh2016deep,qi2017pointnet++]. Attention layers are themselves invariant to permutations of their inputs, only the positional encodings (see Section [ref:sec:mha]) make them order-sensitive. Predicting sets is a more difficult problem that appears primarily in multi-label classification (see e.g., [cite:rezatofighi2017deepsetnet,pineda2019ElucidatingIP] and references therein). Outside multi-label classification, most end-to-end deep learning approaches use either set-embedding approaches [cite:zhang2019fspool,Zhang2019DeepSP], or treat the ordering as a latent variable [cite:rezatofighi2018deep], or use a permutation-invariant loss where here each ground truth element is uniquely matched with predictions during training [cite:vinyals2016order]. Our approach uses permutation-invariant losses, similarly to most works in the computer vision community that we discuss below.",
+      "summary": "",
+      "figureRefs": [
+        "sec:mha"
+      ]
+    },
+    {
+      "id": "seg-018",
+      "order": 18,
+      "section": "Transformers and Parallel Decoding",
+      "level": "subsection",
+      "type": "",
+      "text": "Transformers were introduced by Vaswani et al. [cite:Vaswani2017AttentionIA] as a new attention-based building block for the sequence-to-sequence task of machine translation. \nIt is based on self-attention, which consists \nin weighting the input by an attention over itself. \nSince then, transformers were impactful in multiple other tasks [cite:Devlin2019BERTPO,Lscher2019RWTHAS,Radford2019LanguageMA], including vision tasks like image generation [cite:Parmar2018ImageT]. Attention mechanisms were used in many approaches for object detection. For instance, Wang et al. [cite:Wang2017NonlocalNN] showed that non-local block inside a backbone improves final performance. The authors did not explore a set-based loss and an NMS was applied instead. We note, that non-local block in the backbone is closely related to the self-attention in our encoder blocks. Similarly, Bello et al. [cite:Bello2019AttentionAC] extend ResNets with attention augmented convolutions and showed gains in vision in classification and detection.\n gab: todo finish / redo a pass",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-019",
+      "order": 19,
+      "section": "Transformers and Parallel Decoding",
+      "level": "subsection",
+      "type": "",
+      "text": "Transformers were first used in auto-regressive models, following early sequence-to-sequence models [cite:sutskever2014sequence], generating output tokens one by one. However, the prohibitive inference cost (proportional to output length) lead to the development of parallel sequence generation, in the domains of audio [cite:oord2017parallel], machine translation [cite:Gu2017NonAutoregressiveNM,ghazvininejad2019constant], language modeling/word representation learning [cite:Devlin2019BERTPO], and more recently speech recognition [cite:chan2020imputer]. Here, we also adopt a parallel decoding approach, and unlike many natural language processing (NLP) tasks, the set of predicted detections has no natural order. With parallel decoding DETR demonstrates competitive run-time speed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-020",
+      "order": 20,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "Most modern object detection methods make predictions relative to some initial guesses. Two-stage detectors [cite:Ren2015FasterRT,Cai2019CascadeRH] predict boxes with respect to proposals, whereas single-stage methods make predictions with respect to anchors [cite:Lin2017FocalLF] or a grid of possible object centers [cite:Zhou2019objects,tian2019fcos]. Recent work [cite:Zhang2019bridging] demonstrated that the final performance of these systems heavily depends on the exact way this initial guesses are set. In our model we are able to remove this hand-crafted process and streamline the detection process by directly predicting the set of detections with absolute box prediction with respect to the input image rather than an anchor.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-021",
+      "order": 21,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Set-based loss and attention. \nSeveral object detectors [cite:erhan2014scalable,Liu2016SSDSS,redmon2016you] used the permutation-invariant loss. However, in these early deep learning models, the relation between different prediction was modeled with convolutional or fully-connected layers only and a hand-designed NMS post-processing can improve their performance. More recent detectors [cite:Ren2015FasterRT,Lin2017FocalLF,Zhou2019objects] use non-unique assignment rules between ground truth and predictions together with an NMS.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-022",
+      "order": 22,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "Learnable NMS methods [cite:Hosang2017LearningNS,Bodla2017SoftNMSI] and Relation networks [cite:Hu2017RelationNF] explicitly model relations between different predictions with attention. Using direct set losses, they do not require any post-processing steps. However, these methods employ additional hand-crafted context features like proposal box coordinates to model relations between detections efficiently. In our work we show that an attention-based approach can model object relations without supplementary hand-designed features.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-023",
+      "order": 23,
+      "section": "Object detection",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Recurrent detectors. \nClosest to our approach are end-to-end set predictions for object detection [cite:Stewart2015EndtoEndPD] and instance segmentation [cite:RomeraParedes2015RecurrentIS,Park2015LearningTD,ren2017end,Salvador2017RecurrentNN]. Similarly to us, they use encoder-decoder architectures based on CNN activations to directly produce a set of bounding boxes, without iterating through proposals or object centers. All these approaches use autoregressive decoding (more precisely, recurrent neural networks) to produce boxes or segmentation masks one-by-one. These works, however, were only evaluated on small datasets and not against modern baselines.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-024",
+      "order": 24,
+      "section": "The DETR model",
+      "level": "section",
+      "type": "",
+      "text": "Two ingredients are essential for direct set predictions in detection: (1) a set prediction loss that \nforces unique matching between predicted and ground truth boxes; (2) an architecture that predicts (in a single pass) a set of objects and models their relation. We describe our architecture in detail in Figure [ref:fig:architecture].",
+      "summary": "",
+      "figureRefs": [
+        "fig:architecture"
+      ]
+    },
+    {
+      "id": "seg-025",
+      "order": 25,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "DETR infers a fixed-size set of ⟨N⟩ predictions, in a single pass through the decoder, where ⟨N⟩ is set to be significantly larger than the typical number of objects in an image. One of the main difficulties of training is to score predicted objects (class, position, size) with respect to the ground truth. Our loss produces an optimal bipartite matching between predicted and ground truth objects, and then optimize object-specific (bounding box) losses.",
+      "summary": "",
+      "figureRefs": [],
+      "formulas": [
+        {
+          "raw": "\\label{eq:matching} \\hat{\\sigma} = \\argmin_{\\sigma\\in\\mathfrak{S}_N} \\sum_{i}^{N} \\lmatch{y_i, \\hat{y}_{\\sigma(i)}},",
+          "label": "eq:matching"
+        },
+        {
+          "raw": "\\hloss{y, \\hat{y}} = \\sum_{i=1}^N \\left[-\\log \\hat{p}_{\\hat{\\sigma}(i)}(c_{i}) + \\mathds{1}_{\\{c_i\\neq\\varnothing\\}} \\bloss{b_{i}, \\hat{b}_{\\hat{\\sigma}}(i)}\\right]\\,,",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "seg-026",
+      "order": 26,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "Let us denote by ⟨y⟩ the ground truth set of objects, and ⟨ = \\ _i\\_i=1^N⟩ the set of ⟨N⟩ predictions.\nAssuming ⟨N⟩ is larger than the number of objects in the image,\nwe consider ⟨y⟩ also as a set of size ⟨N⟩ padded with ⟨ ⟩ (no object).\nTo find a bipartite matching between these two sets we search for a permutation of ⟨N⟩ elements ⟨ _N⟩ with the lowest cost:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-027",
+      "order": 27,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨ y_i, _ (i)⟩ is a pair-wise matching cost between ground truth ⟨y_i⟩ and a prediction with index ⟨ (i)⟩. This optimal assignment is computed efficiently with the Hungarian algorithm, following prior work ( e.g., [cite:Stewart2015EndtoEndPD]).",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-028",
+      "order": 28,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "The matching cost takes into account both the class prediction and the similarity of predicted and ground truth boxes. Each element ⟨i⟩ of the ground truth set can be seen as a ⟨y_i = (c_i, b_i)⟩ where ⟨c_i⟩ is the target class label (which may be ⟨ ⟩) and ⟨b_i [0, 1]^4⟩ is a vector that defines ground truth box center coordinates and its height and width relative to the image size. For the prediction with index ⟨ (i)⟩ we define probability of class ⟨c_i⟩ as ⟨ _ (i)(c_i)⟩ and the predicted box as ⟨ _ (i)⟩. With these notations we define\n⟨ y_i, _ (i)⟩ as ⟨- _\\c_i \\ _ (i)(c_i) + _\\c_i \\ b_i, _ (i)⟩.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-029",
+      "order": 29,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "This procedure of finding matching plays the same role as the heuristic assignment rules used to match proposal [cite:Ren2015FasterRT] or anchors [cite:lin2017feature] to ground truth objects in modern detectors. The main difference is that we need to find one-to-one matching for direct set prediction without duplicates.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-030",
+      "order": 30,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "The second step is to compute the loss function, the Hungarian loss for all pairs matched in the previous step. We define the loss similarly to the losses of common object detectors, i.e., a linear combination of a negative log-likelihood for class prediction and a box loss defined later:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-031",
+      "order": 31,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨ ⟩ is the optimal assignment computed in the first step ([ref:eq:matching]). In practice, we down-weight the log-probability term when ⟨c_i= ⟩ by a factor ⟨10⟩ to account for class imbalance. This is analogous to how Faster R-CNN training procedure balances positive/negative proposals by subsampling [cite:Ren2015FasterRT].\nNotice that the matching cost between an object and ⟨ ⟩ doesn't depend\non the prediction, which means that in that case the cost is a constant.\n \nThere are subtle differences between ⟨ L_ match( , )⟩ and ⟨ L_ Hungarian( ,\n )⟩. Firstly, inIn the matching cost we use probabilities\n⟨ _ (i)(c_i)⟩ instead of log-probabilities. This makes the\nclass prediction term commensurable to ⟨ L_ box( , )⟩ (described below),\nand we observed better empirical performances. The second difference is that in\nthe ⟨ L_ box( , )⟩ described below, we replace the L1 norm by a L2 norm.",
+      "summary": "",
+      "figureRefs": [
+        "eq:matching"
+      ]
+    },
+    {
+      "id": "seg-032",
+      "order": 32,
+      "section": "Object detection set prediction loss",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Bounding box loss. The second part of the matching cost and the Hungarian loss is ⟨ L_ box( )⟩ that scores the bounding boxes. Unlike many detectors that do box predictions as a ⟨ ⟩ with respect to some initial guesses, we make box predictions directly.\nWhile such approach simplify the implementation it poses an issue with relative scaling of the loss.\nThe most commonly-used ⟨ _1⟩ loss will have different scales for small and large boxes even if their relative errors are similar.\nTo mitigate this issue we use a linear combination of the ⟨ _1⟩ loss and the generalized IoU loss [cite:Rezatofighi_2018_CVPR] ⟨ L_ iou( , )⟩ that is scale-invariant.\nOverall, our box loss is ⟨ b_i, _ (i)⟩ defined as ⟨ _ iou b_i, _ (i) + _ L1||b_i- _ (i)||_1⟩ where ⟨ _ iou, _ L1 ⟩ are hyperparameters. \nThese two losses are normalized by the number of objects inside the batch.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-033",
+      "order": 33,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "The overall DETR architecture is surprisingly simple and depicted in Figure [ref:fig:architecture]. It contains three main components, which we describe below: a CNN backbone to extract a compact feature representation, an encoder-decoder transformer, and a simple feed forward network (FFN) that makes the final detection prediction.",
+      "summary": "",
+      "figureRefs": [
+        "fig:architecture"
+      ],
+      "figures": [
+        {
+          "asset": "./figures/DETR_detail_seagulls",
+          "caption": "DETR uses a conventional CNN backbone to learn a 2D representation of an input image.\n The model flattens it and supplements it with a positional encoding before\n passing it into a transformer encoder.\n A transformer decoder then takes as input a small fixed number of learned positional embeddings,\n which we call object queries, and additionally attends to the encoder output.\n We pass each output embedding of the decoder to a shared feed forward\n network (FFN) that predicts either a detection (class and bounding box) or a `` no object'' class.",
+          "label": "fig:architecture"
+        }
+      ]
+    },
+    {
+      "id": "seg-034",
+      "order": 34,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "Unlike many modern detectors, DETR can be implemented in any deep learning framework that provides a common CNN backbone and a transformer architecture implementation with just a few hundred lines. Inference code for DETR can be implemented in less than 50 lines in PyTorch [cite:Pytorch]. We hope that the simplicity of our method will attract new researchers to the detection community.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-035",
+      "order": 35,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Backbone. Starting from the initial image ⟨x_ img ^3 H_0 W_0⟩ (with ⟨3⟩ color channels ), a conventional CNN backbone generates a lower-resolution activation map ⟨f ^C H W⟩. Typical values we use are ⟨C=2048⟩ and ⟨H, W = , ⟩.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-036",
+      "order": 36,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Transformer encoder. First, a 1x1 convolution reduces the channel dimension of the high-level activation map ⟨f⟩ from ⟨C⟩ to a smaller dimension ⟨d⟩. creating a new feature map ⟨z_0 ^d H W⟩. The encoder expects a sequence as input, hence we collapse the spatial dimensions of ⟨z_0⟩ into one dimension, resulting in a ⟨d HW⟩ feature map.\nEach encoder layer has a standard architecture and consists of a multi-head self-attention module and a feed forward network (FFN). \nSince the transformer architecture is permutation-invariant, we supplement it \nwith fixed positional encodings [cite:Parmar2018ImageT,Bello2019AttentionAC]\nthat are added to the input of each attention layer. We defer to the supplementary material the detailed definition of the architecture, which follows the one described in [cite:Vaswani2017AttentionIA].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-037",
+      "order": 37,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Transformer decoder.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-038",
+      "order": 38,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "The decoder follows the standard architecture of the transformer, transforming ⟨N⟩ embeddings of size ⟨d⟩ using multi-headed self- and encoder-decoder attention mechanisms. The difference with the original transformer is that our model decodes the ⟨N⟩ objects in parallel at each decoder layer, while Vaswani et al. [cite:Vaswani2017AttentionIA] use an autoregressive model that predicts the output sequence one element at a time. We refer the reader unfamiliar with the concepts to the supplementary material. \nSince the decoder is also permutation-invariant, the ⟨N⟩ input embeddings must be different to produce different results. These input embeddings are learnt positional encodings that we refer to as object queries, and similarly to the encoder, we add them to the input of each attention layer.\nThe ⟨N⟩ object queries are transformed into an output embedding by the decoder. They are then\nindependently decoded into box coordinates and class labels by a \nfeed forward network (described in the next subsection), resulting ⟨N⟩ final predictions. Using self- and encoder-decoder attention over these embeddings, the model globally reasons about all objects \ntogether using pair-wise relations between them, while being able to use the whole image as context.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-039",
+      "order": 39,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Prediction feed-forward networks (FFNs).\nThe final prediction is\ncomputed by perceptron with ReLU activation function and hidden\ndimension ⟨d⟩, \nThe FFN predicts the normalized center coordinates, height and width of the box with respect to the input image, and the predicts the class label using a softmax function. Since we predict a fixed-size set of ⟨N⟩ bounding boxes, where ⟨N⟩ is usually much larger than the actual number of objects of interest in an image, an additional special class label ⟨ ⟩ is used to represent that no object is detected within a slot. This class plays a similar role to the ``background'' class in the standard object detection approaches.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-040",
+      "order": 40,
+      "section": "DETR architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Auxiliary decoding losses.\n \nWe found helpful to use auxiliary losses [cite:al2019character] in decoder\nduring training, especially to help the model output the correct number of\nobjects of each class.\nWe add prediction FFNs and Hungarian loss after each decoder layer. . We use an additional shared layer-norm to normalize the input to the prediction FFNs from different decoder layers.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-041",
+      "order": 41,
+      "section": "Extending DETR to higher resolution feature maps",
+      "level": "subsection",
+      "type": "",
+      "text": "Modern detectors [cite:tian2019fcos,Zhou2019objects,Du2019SpineNetLS,tan2019efficientdet] adopt feature pyramids [cite:lin2017feature] with up to stride 8 or 4 features maps and use different levels to detect objects at different scales. Such an approach significantly improves detection performance for small objects. \nWe explore an approach to increase the feature resolution popularized by FCIS [cite:li2017fully]. \nWe add a dilation to the last stage of our CNN backbone and remove stride from the first convolution in the stage. This yields a stride 16 feature map instead of the original stride 32. Similarly to previous works we name this design DETR -DC5 (dilated C5 stage). It improves performance for small objects, but increases the computation cost of the self-attentions in encoder by a factor 16. Since encoder self-attentions are only a fraction of the total computation cost, the overall computational cost increases by a factor 2. A full comparison of FLOPs for DETR , DETR -DC5, and Faster R-CNN is given in Table [ref:table:frcnn].",
+      "summary": "",
+      "figureRefs": [
+        "table:frcnn"
+      ]
+    },
+    {
+      "id": "seg-042",
+      "order": 42,
+      "section": "Experiments",
+      "level": "section",
+      "type": "",
+      "text": "We show that DETR achieves competitive results compared to Faster R-CNN\nin quantitative evaluation on COCO.\nThen, we provide a detailed ablation study of the architecture and loss,\nwith insights and qualitative results.\nFinally, to show that DETR is a versatile and extensible model,\nwe present results on panoptic segmentation, training only a small\nextension on a fixed DETR model.\nWe provide code and pretrained models to reproduce our experiments at\n .\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Dataset.\nWe perform experiments on COCO 2017 detection and panoptic segmentation datasets [cite:Lin2014coco,panoptic_kirillov2019fpn],\ncontaining training images and 5k validation images.\nEach image is annotated with bounding boxes and panoptic segmentation.\nThere are 7 instances per image on average, up to 63 instances in a single image\nin training set, ranging from small to large on the same images. \nIf not specified, we report AP as bbox AP, the integral metric over multiple thresholds.\n \n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Technical details.\n \n We train DETR with AdamW [cite:Loshchilov2017DecoupledWD], with a weight decay of ⟨10^-4⟩ and initial learning rates of ⟨10^-4⟩ and ⟨10^-5⟩ for the tranformer and the backbone respectivelyWe train DETR with AdamW [cite:Loshchilov2017DecoupledWD]\nsetting the initial transformer's learning rate to ⟨10^-4⟩, the\nbackbone's to ⟨10^-5⟩, and weight decay to ⟨10^-4⟩.\nAll transformer weights are initialized with Xavier [cite:Glorot2010UnderstandingTD],\nand the backbone is ImageNet-pretrained ResNet model [cite:He2015DeepRL] from torchvision with frozen batchnorm layers.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-043",
+      "order": 43,
+      "section": "Experiments",
+      "level": "section",
+      "type": "",
+      "text": "We use scale augmentation, resizing the input images such that the shortest side is at least 480 and at most 800 pixels while the longest at most 1333 [cite:wu2019detectron2].\nTo help learning global relationships through the self-attention of the encoder, we also apply random crop augmentations during training, improving the performance by approximately 1 AP.\nSpecifically, a train image is cropped with probability 0.5 to a\nrandom rectangular patch which is then resized again to 800-1333.\nThe transformer is trained with default dropout of 0.1.\n \n \nFor our ablation experiments we use training schedule \nof 300 epochs with a learning rate drop by a factor of 10 after 200 epochs,\nwhere a single epoch is a pass over all training images once.\n \nTraining the baseline model for 300 epochs on 16 V100 GPUs takes 3 days,\nwith 4 images per GPU (hence a total batch size of 64).\nFor the longer schedule used to compare with Faster R-CNN we train\n \nfor 500 epochs with learning rate drop after 400 epochs.\nThis schedule adds 1.5 AP compared to the shorter schedule.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-044",
+      "order": 44,
+      "section": "Comparison with Faster R-CNN",
+      "level": "subsection",
+      "type": "",
+      "text": "Transformers are typically trained with Adam or Adagrad optimizers with\nvery long training schedules and dropout, and this is true for DETR as well.\nFaster R-CNN, however, is trained with SGD with minimal data augmentation\nand we are not aware of successful applications of Adam or dropout.\nDespite these differences we attempt to make a Faster R-CNN baseline stronger.\nTo align it with DETR ,\nwe add generalized IoU [cite:Rezatofighi_2018_CVPR] to the box loss, the same random crop augmentation and long training known to\nimprove results [cite:He2018RethinkingIP].\nResults are presented in Table [ref:table:frcnn].\nIn the top section we show Faster R-CNN results from Detectron2 Model Zoo [cite:wu2019detectron2]\nfor models trained with the 3x schedule.\nIn the middle section we show results (with a ``+'') for the same models\nbut trained with the 9x schedule (109 epochs) and the described enhancements,\nwhich in total adds 1-2 AP. In the last section of Table [ref:table:frcnn]\nwe show the results for multiple DETR models.\nTo be comparable in the number of parameters we choose a model\nwith 6 transformer and 6 decoder layers of width 256 .\nLike Faster R-CNN with FPN this model has 41.3M parameters,\nout of which 23.5M are in ResNet-50, and 17.8M are in the transformer.\nEven though both Faster R-CNN and DETR are still likely to\nfurther improve with longer training,\nwe can conclude that can be competitive with Faster R-CNN\nwith the same number of parameters, achieving 42 AP on the COCO val subset.\n The way DETR achieves this is by improving AP , however note that the model is still lagging behind in AP .\nThe way DETR achieves this is by improving AP (+7.8),\nhowever note that the model is still lagging behind in AP (-5.5).\nDETR -DC5 with the same number of parameters and similar FLOP count has higher AP,\nbut is still significantly behind in AP too.",
+      "summary": "",
+      "figureRefs": [
+        "table:frcnn",
+        "table:frcnn"
+      ],
+      "tables": [
+        {
+          "label": "table:frcnn",
+          "caption": "Comparison with Faster R-CNN with a ResNet-50 and ResNet-101 backbones on the COCO validation set.\n The top section shows results for Faster R-CNN models in Detectron2 [cite:wu2019detectron2],\n the middle section shows results for Faster R-CNN models\n with GIoU [cite:Rezatofighi_2018_CVPR], random crops train-time augmentation, and the long 9x training schedule.\n DETR models achieve comparable results\n to heavily tuned Faster R-CNN baselines, having lower AP but greatly improved AP .",
+          "header": [
+            "Model",
+            "GFLOPS/FPS",
+            "#params",
+            "AP",
+            "AP",
+            "AP",
+            "AP",
+            "AP",
+            "AP"
+          ],
+          "rows": [
+            [
+              "Faster RCNN-DC5",
+              "320/16",
+              "166M",
+              "39.0",
+              "60.5",
+              "42.3",
+              "21.4",
+              "43.5",
+              "52.5"
+            ],
+            [
+              "Faster RCNN-FPN",
+              "180/26",
+              "42M",
+              "40.2",
+              "61.0",
+              "43.8",
+              "24.2",
+              "43.5",
+              "52.0"
+            ],
+            [
+              "Faster RCNN-R101-FPN",
+              "246/20",
+              "60M",
+              "42.0",
+              "62.5",
+              "45.9",
+              "25.2",
+              "45.6",
+              "54.6"
+            ],
+            [
+              "Faster RCNN-DC5+",
+              "320/16",
+              "166M",
+              "41.1",
+              "61.4",
+              "44.3",
+              "22.9",
+              "45.9",
+              "55.0"
+            ],
+            [
+              "Faster RCNN-FPN+",
+              "180/26",
+              "42M",
+              "42.0",
+              "62.1",
+              "45.5",
+              "26.6",
+              "45.4",
+              "53.4"
+            ],
+            [
+              "Faster RCNN-R101-FPN+",
+              "246/20",
+              "60M",
+              "44.0",
+              "63.9",
+              "47.8",
+              "27.2",
+              "48.1",
+              "56.0"
+            ],
+            [
+              "DETR",
+              "86/28",
+              "41M",
+              "42.0",
+              "62.4",
+              "44.2",
+              "20.5",
+              "45.8",
+              "61.1"
+            ],
+            [
+              "DETR -DC5",
+              "187/12",
+              "41M",
+              "43.3",
+              "63.1",
+              "45.9",
+              "22.5",
+              "47.3",
+              "61.1"
+            ],
+            [
+              "DETR -R101",
+              "152/20",
+              "60M",
+              "43.5",
+              "63.8",
+              "46.4",
+              "21.9",
+              "48.0",
+              "61.8"
+            ],
+            [
+              "DETR -DC5-R101",
+              "253/10",
+              "60M",
+              "44.9",
+              "64.7",
+              "47.7",
+              "23.7",
+              "49.5",
+              "62.3"
+            ]
+          ],
+          "columnCount": 9
+        }
+      ]
+    },
+    {
+      "id": "seg-045",
+      "order": 45,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "Attention mechanisms in the transformer decoder are the key components which model relations between feature representations of different detections. In our ablation analysis, we explore how other components of our architecture and loss influence the final performance. For the study we choose ResNet-50-based DETR model with 6 encoder, 6 decoder layers and width 256.\nThe model has 41.3M parameters,\nachieves on short and long schedules respectively,\nand runs at FPS, similarly to Faster R-CNN-FPN with the same backbone.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Number of encoder layers.\nWe evaluate the importance of global image-level self-attention by changing the number of encoder layers (Table [ref:table:enc_layers]).\nWithout encoder layers, overall AP drops by points, with a more significant drop of on large objects.\nWe hypothesize that, by using global scene reasoning, the encoder is important for disentangling objects.\nIn Figure [ref:fig:encoder_self_attention], we visualize the attention maps of the last encoder layer of a trained model, focusing on a few points in the image.\nThe encoder seems to separate instances already, which likely simplifies object extraction and localization for the decoder.",
+      "summary": "",
+      "figureRefs": [
+        "table:enc_layers",
+        "fig:encoder_self_attention"
+      ],
+      "figures": [
+        {
+          "asset": "figures/cows_attn.pdf",
+          "caption": "Encoder self-attention for a set of reference points. The encoder is able to separate individual instances.\n Predictions are made with baseline DETR model on a validation set image.",
+          "label": "fig:encoder_self_attention"
+        },
+        {
+          "asset": "figures/nms_fig4.pdf",
+          "caption": "AP and AP performance after each decoder layer.\n A single long schedule baseline model is evaluated.\n DETR does not need NMS by design, which is validated by this figure.\n NMS lowers AP in the final layers, removing TP predictions,\n but improves AP in the first decoder layers, removing double predictions,\n as there is no communication in the first layer , and slightly improves AP .",
+          "label": "fig:nms"
+        },
+        {
+          "asset": "figures/elephants.png",
+          "caption": "Visualizing decoder attention for every predicted object\n (images from COCO val set).\n Predictions are made with DETR -DC5 model.\n Attention scores are coded with different colors for different objects.\n Decoder typically attends to object extremities,\n such as legs and heads.\n Best viewed in color.",
+          "label": "fig:attention_maps"
+        }
+      ],
+      "tables": [
+        {
+          "label": "table:enc_layers",
+          "caption": "Effect of encoder size. Each row corresponds to a model with varied number of encoder layers and fixed number of decoder layers.\n Performance gradually improves with more encoder layers.",
+          "header": [
+            "#layers",
+            "GFLOPS/FPS",
+            "#params",
+            "AP",
+            "AP",
+            "AP",
+            "AP",
+            "AP"
+          ],
+          "rows": [
+            [
+              "0",
+              "76/28",
+              "33.4M",
+              "36.7",
+              "57.4",
+              "16.8",
+              "39.6",
+              "54.2"
+            ],
+            [
+              "3",
+              "81/25",
+              "37.4M",
+              "40.1",
+              "60.6",
+              "18.5",
+              "43.8",
+              "58.6"
+            ],
+            [
+              "6",
+              "86/23",
+              "41.3M",
+              "40.6",
+              "61.6",
+              "19.9",
+              "44.3",
+              "60.2"
+            ],
+            [
+              "12",
+              "95/20",
+              "49.2M",
+              "41.6",
+              "62.1",
+              "19.8",
+              "44.9",
+              "61.9"
+            ]
+          ],
+          "columnCount": 8
+        },
+        {
+          "label": "table:pos_enc",
+          "caption": "Results for different positional encodings compared\n to the baseline (last row), which has fixed sine pos. encodings passed\n at every attention layer in both the encoder and the decoder.\n Learned embeddings are shared between all layers.\n Not using spatial positional encodings leads to a significant\n drop in AP. Interestingly, passing them in decoder only\n leads to a minor AP drop.\n All these models use learned output positional encodings.",
+          "header": [
+            "spatial pos. enc.",
+            "output pos. enc."
+          ],
+          "rows": [
+            [
+              "encoder",
+              "decoder",
+              "decoder",
+              "AP",
+              "⟨ ⟩",
+              "AP",
+              "⟨ ⟩"
+            ],
+            [
+              "none",
+              "none",
+              "learned at input",
+              "32.8",
+              "-7.8",
+              "55.2",
+              "-6.5"
+            ],
+            [
+              "sine at input",
+              "sine at input",
+              "learned at input",
+              "39.2",
+              "-1.4",
+              "60.0",
+              "-1.6"
+            ],
+            [
+              "learned at attn.",
+              "learned at attn.",
+              "learned at attn.",
+              "39.6",
+              "-1.0",
+              "60.7",
+              "-0.9"
+            ],
+            [
+              "none",
+              "sine at attn.",
+              "learned at attn.",
+              "39.3",
+              "-1.3",
+              "60.3",
+              "-1.4"
+            ],
+            [
+              "sine at attn.",
+              "sine at attn.",
+              "learned at attn.",
+              "40.6",
+              "-",
+              "61.6",
+              "-"
+            ]
+          ],
+          "columnCount": 7
+        },
+        {
+          "label": "table:cost",
+          "caption": "Effect of components on AP.\n \n We train two models turning off ⟨ _1⟩ loss, and GIoU loss,\n and observe that ⟨ _1⟩ gives poor results on its own,\n but when combined with GIoU improves AP and AP .\n Our baseline (last row) combines both losses.",
+          "header": [
+            "class",
+            "⟨ _1⟩",
+            "GIoU",
+            "AP",
+            "⟨ ⟩",
+            "AP",
+            "⟨ ⟩",
+            "AP",
+            "AP",
+            "AP"
+          ],
+          "rows": [
+            [
+              "",
+              "",
+              "",
+              "35.8",
+              "-4.8",
+              "57.3",
+              "-4.4",
+              "13.7",
+              "39.8",
+              "57.9"
+            ],
+            [
+              "",
+              "",
+              "",
+              "39.9",
+              "-0.7",
+              "61.6",
+              "0",
+              "19.9",
+              "43.2",
+              "57.9"
+            ],
+            [
+              "",
+              "",
+              "",
+              "40.6",
+              "-",
+              "61.6",
+              "-",
+              "19.9",
+              "44.3",
+              "60.2"
+            ]
+          ],
+          "columnCount": 10
+        }
+      ]
+    },
+    {
+      "id": "seg-046",
+      "order": 46,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Number of decoder layers.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-047",
+      "order": 47,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "We apply auxiliary losses after each decoding layer\n(see Section [ref:sec:deep_supervision]), hence, the prediction FFNs are trained by design to predict objects out of the outputs of every decoder layer. \nWe analyze the importance of each decoder layer by evaluating the objects that would be predicted at each stage of the decoding (Fig. [ref:fig:nms]).\nBoth AP and AP improve after every layer, totalling into a very significant AP improvement between the first and the last layer. \nWith its set-based loss, DETR does not need NMS by design. To verify this we run a standard NMS procedure with default parameters [cite:wu2019detectron2] for the outputs after each decoder.\nNMS improves performance for the predictions from the first decoder. This can be explained by the fact that a single decoding layer of the transformer is not able to compute any cross-correlations between the output elements, and thus it is prone to making multiple predictions for the same object.\nIn the second and subsequent layers, the self-attention mechanism over the activations allows the model to inhibit duplicate predictions. We observe that the improvement brought by NMS diminishes as depth increases. At the last layers, we observe a small loss in AP as NMS incorrectly removes true positive predictions.",
+      "summary": "",
+      "figureRefs": [
+        "sec:deep_supervision",
+        "fig:nms"
+      ]
+    },
+    {
+      "id": "seg-048",
+      "order": 48,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "Similarly to visualizing encoder attention,\nwe visualize decoder attentions in Fig. [ref:fig:attention_maps],\ncoloring attention maps for each predicted object in different colors.\nWe observe that decoder attention is fairly local, meaning that it mostly attends to object extremities such as heads or legs.\nWe hypothesise that after the encoder has separated instances via\nglobal attention, the decoder only needs to attend to the extremities to extract the class and object boundaries.",
+      "summary": "",
+      "figureRefs": [
+        "fig:attention_maps"
+      ]
+    },
+    {
+      "id": "seg-049",
+      "order": 49,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Importance of FFN.\nFFN inside tranformers can be seen as ⟨1 1⟩ convolutional layers,\nmaking encoder similar to\nattention augmented convolutional networks [cite:Bello2019AttentionAC].\nWe attempt to remove it completely leaving only attention in the transformer layers.\nBy reducing the number of network parameters from 41.3M to 28.7M,\nleaving only 10.8M in the transformer, performance drops by , we thus conclude that FFN are important for achieving good results.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-050",
+      "order": 50,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Importance of positional encodings.\nThere are two kinds of positional encodings in our model: spatial \npositional encodings and output positional encodings (object queries).\nWe experiment with various combinations of fixed and learned encodings,\nresults can be found in table [ref:table:pos_enc].\nOutput positional encodings are required and cannot be removed,\nso we experiment with either passing them once at decoder input\nor adding to queries at every decoder attention layer.\nIn the first experiment we completely remove spatial positional encodings\nand pass output positional encodings at input\nand, interestingly, the model still achieves \nmore than AP, losing AP to the baseline.\nThen, we pass fixed sine spatial positional encodings and the output encodings\nat input once, as in the original transformer [cite:Vaswani2017AttentionIA],\nand find that this leads to AP drop compared to passing the positional encodings\ndirectly in attention.\nLearned spatial encodings passed to the attentions give\nsimilar results.\nSurprisingly, we find that not passing any spatial encodings in the encoder\nonly leads to a minor AP drop of 1.3 AP.\nWhen we pass the encodings to the attentions, they are shared across all layers,\nand the output encodings (object queries) are always learned.",
+      "summary": "",
+      "figureRefs": [
+        "table:pos_enc"
+      ]
+    },
+    {
+      "id": "seg-051",
+      "order": 51,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "Given these ablations, we conclude that transformer components:\nthe global self-attention in encoder, FFN, multiple decoder layers, and positional encodings,\nall significantly contribute to the final object detection performance.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-052",
+      "order": 52,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n ablations. \nTo evaluate the importance of different components of the matching cost and the loss,\nwe train several models turning them on and off.\nThere are three components to the loss: \nclassification loss, ⟨ _1⟩ bounding box distance loss, and GIoU [cite:Rezatofighi_2018_CVPR] loss.\nThe classification is essential for training and cannot be turned off,\nso we train a model without bounding box distance loss,\nand a model without the GIoU loss,\nand compare with baseline, trained with all three losses.\nResults are presented in table [ref:table:cost].",
+      "summary": "",
+      "figureRefs": [
+        "table:cost"
+      ]
+    },
+    {
+      "id": "seg-053",
+      "order": 53,
+      "section": "Ablations",
+      "level": "subsection",
+      "type": "",
+      "text": "GIoU loss on its own accounts for most of the model performance,\nlosing only 0.7 AP to the baseline with combined losses.\nUsing ⟨ _1⟩ without GIoU shows poor results.\nWe only studied simple ablations of different (using the same weighting every time),\nbut other means of combining them may achieve different results.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-054",
+      "order": 54,
+      "section": "Analysis",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Decoder output slot analysis",
+      "summary": "",
+      "figureRefs": [],
+      "figures": [
+        {
+          "asset": "figures/query_distr.png",
+          "caption": "Visualization of all box predictions on all images from COCO 2017 val set for 20 out of total ⟨N=100⟩ prediction slots in DETR decoder. Each box prediction is represented as a point with the coordinates of its center in the 1-by-1 square normalized by each image size. The points are color-coded so that green color corresponds to small boxes, red to large horizontal boxes and blue to large vertical boxes. We observe that each slot learns to specialize on certain areas and box sizes with several operating modes. We note that almost all slots have a mode of predicting large image-wide boxes that are common in COCO dataset.",
+          "label": "fig:queries"
+        }
+      ]
+    },
+    {
+      "id": "seg-055",
+      "order": 55,
+      "section": "Analysis",
+      "level": "subsection",
+      "type": "",
+      "text": "In Fig. [ref:fig:queries] we visualize the boxes predicted by different slots for\nall images in COCO 2017 val set. DETR learns different specialization for each\nquery slot. We observe that each slot has several modes of operation focusing on\ndifferent areas and box sizes. In particular, all slots have the mode for\npredicting image-wide boxes (visible as the red dots aligned in the middle of\nthe plot). We hypothesize that this is related to the distribution of objects in COCO.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Generalization to unseen numbers of instances.\nSome classes in COCO are not well represented with many instances of the same class in the same image. For example, there is no image with more than 13 giraffes in the training set. We create a synthetic image to verify the generalization ability of DETR (see Figure [ref:fig:giraffe]). Our model is able to find all 24 giraffes on the image which is clearly out of distribution. This experiment confirms that there is no strong class-specialization in each object query.",
+      "summary": "",
+      "figureRefs": [
+        "fig:queries",
+        "fig:giraffe"
+      ]
+    },
+    {
+      "id": "seg-056",
+      "order": 56,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "Panoptic segmentation [cite:Kirillov2019panoptic] has recently attracted a lot of attention from the computer vision community. Similarly to the extension of Faster R-CNN [cite:Ren2015FasterRT] to Mask R-CNN [cite:He2017MaskR], DETR can be naturally extended by adding a mask head on top of the decoder outputs. In this section we demonstrate that such a head can be used to produce panoptic segmentation [cite:Kirillov2019panoptic] by treating stuff and thing classes in a unified way. We perform our experiments on the panoptic annotations of the COCO dataset that has 53 stuff categories in addition to 80 things categories.",
+      "summary": "",
+      "figureRefs": [],
+      "figures": [
+        {
+          "asset": "figures/panoptic2.pdf",
+          "caption": "Illustration of the panoptic head. A binary mask is generated in parallel for each detected object, then the masks are merged using pixel-wise argmax.",
+          "label": "fig:pano"
+        },
+        {
+          "asset": "figures/Panoptic/0784_detr_R101.jpg",
+          "caption": "Qualitative results for panoptic segmentation generated by DETR-R101. DETR produces aligned mask predictions in a unified manner for things and stuff.",
+          "label": "fig:pano_quali"
+        }
+      ],
+      "tables": [
+        {
+          "label": "table:panoptic_numbers",
+          "caption": "Comparison with the state-of-the-art methods\n UPSNet [cite:panoptic_xiong2019upsnet] and Panoptic\n FPN [cite:panoptic_kirillov2019fpn] on the COCO val dataset\n We retrained PanopticFPN with the same data-augmentation as DETR,\n on a 18x schedule for fair comparison. UPSNet uses the 1x schedule,\n UPSNet-M is the version with multiscale test-time augmentations.",
+          "header": [
+            "Model",
+            "Backbone",
+            "PQ",
+            "SQ",
+            "RQ",
+            "⟨PQ^th⟩",
+            "⟨SQ^th⟩",
+            "⟨RQ^th⟩",
+            "⟨PQ^st⟩",
+            "⟨SQ^st⟩",
+            "⟨RQ^st⟩",
+            "AP"
+          ],
+          "rows": [
+            [
+              "PanopticFPN++",
+              "R50",
+              "42.4",
+              "79.3",
+              "51.6",
+              "49.2",
+              "82.4",
+              "58.8",
+              "32.3",
+              "74.8",
+              "40.6",
+              "37.7"
+            ],
+            [
+              "UPSnet",
+              "R50",
+              "42.5",
+              "78.0",
+              "52.5",
+              "48.6",
+              "79.4",
+              "59.6",
+              "33.4",
+              "75.9",
+              "41.7",
+              "34.3"
+            ],
+            [
+              "UPSnet-M",
+              "R50",
+              "43.0",
+              "79.1",
+              "52.8",
+              "48.9",
+              "79.7",
+              "59.7",
+              "34.1",
+              "78.2",
+              "42.3",
+              "34.3"
+            ],
+            [
+              "PanopticFPN++",
+              "R101",
+              "44.1",
+              "79.5",
+              "53.3",
+              "51.0",
+              "83.2",
+              "60.6",
+              "33.6",
+              "74.0",
+              "42.1",
+              "39.7"
+            ],
+            [
+              "DETR",
+              "R50",
+              "43.4",
+              "79.3",
+              "53.8",
+              "48.2",
+              "79.8",
+              "59.5",
+              "36.3",
+              "78.5",
+              "45.3",
+              "31.1"
+            ],
+            [
+              "DETR-DC5",
+              "R50",
+              "44.6",
+              "79.8",
+              "55.0",
+              "49.4",
+              "80.5",
+              "60.6",
+              "37.3",
+              "78.7",
+              "46.5",
+              "31.9"
+            ],
+            [
+              "DETR-R101",
+              "R101",
+              "45.1",
+              "79.9",
+              "55.5",
+              "50.5",
+              "80.9",
+              "61.7",
+              "37.0",
+              "78.5",
+              "46.0",
+              "33.0"
+            ]
+          ],
+          "columnCount": 12
+        }
+      ]
+    },
+    {
+      "id": "seg-057",
+      "order": 57,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "We train DETR to predict boxes around both stuff and things\nclasses on COCO, using the same recipe. Predicting boxes is required for the\ntraining to be possible, since the Hungarian matching is computed using\ndistances between boxes. We also add a mask head which predicts a binary mask\nfor each of the predicted boxes, see Figure [ref:fig:pano]. It takes as input\nthe output of transformer decoder for each object and computes multi-head (with\n⟨M⟩ heads) attention scores of this embedding over the output of the encoder,\ngenerating ⟨M⟩ attention heatmaps per object in a small resolution. To make the\nfinal prediction and increase the resolution, an FPN-like architecture is used.\nWe describe the architecture in more details in the supplement. The final\nresolution of the masks has stride 4 and each mask is supervised independently\nusing the DICE/F-1 loss [cite:milletari2016v] .",
+      "summary": "",
+      "figureRefs": [
+        "fig:pano"
+      ]
+    },
+    {
+      "id": "seg-058",
+      "order": 58,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "The mask head can be trained either jointly, or in a two steps , where we\ntrain DETR for boxes only, then freeze all the weights and train only the mask\nhead for 25 epochs. Experimentally, these two approaches give similar results,\nwe report results using the latter method since it results in a shorter total\nwall-clock time training.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-059",
+      "order": 59,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "To predict the final panoptic segmentation we simply use an argmax over the mask scores at each pixel, and assign the corresponding categories to the resulting masks. This procedure guarantees that the final masks have no overlaps and, therefore, DETR does not require a heuristic [cite:Kirillov2019panoptic] that is often used \nto align different masks.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-060",
+      "order": 60,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Training details. We train DETR , DETR -DC5 and DETR -R101 models\nfollowing the recipe for bounding box detection to predict boxes around stuff\nand things classes in COCO dataset.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-061",
+      "order": 61,
+      "section": "DETR for panoptic segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Main results. Qualitative results are shown in\nFigure [ref:fig:pano_quali]. In table [ref:table:panoptic_numbers] we compare\nour unified panoptic segmenation approach with several established methods that\ntreat things and stuff differently. We report the Panoptic Quality (PQ) and the\nbreak-down on things (⟨PQ^th⟩) and stuff (⟨PQ^st⟩). We also report the mask AP (computed on the\nthings classes), before any panoptic post-treatment (in our case, before taking\nthe pixel-wise argmax).\nWe show that DETR outperforms published results on COCO-val 2017, as well as\nour strong PanopticFPN baseline (trained with same data-augmentation \nas DETR , for fair comparison). The result break-down shows that DETR is\nespecially dominant on stuff classes, and we hypothesize that the global\nreasoning allowed by the encoder attention is the key element to this result.\nFor things class, despite a severe deficit of up to 8 mAP compared to the\nbaselines on the mask AP computation, DETR obtains competitive\n⟨PQ^th⟩.\n \nWe hope that our approach will inspire the exploration of fully unified models for panoptic segmentation in future work.",
+      "summary": "",
+      "figureRefs": [
+        "fig:pano_quali",
+        "table:panoptic_numbers"
+      ]
+    },
+    {
+      "id": "seg-062",
+      "order": 62,
+      "section": "Conclusion",
+      "level": "section",
+      "type": "",
+      "text": "We presented DETR , a new design for object detection systems based on transformers and bipartite matching loss for direct set prediction. The approach achieves comparable results to an optimized Faster R-CNN baseline on the challenging COCO dataset. DETR is straightforward to implement and has a flexible architecture that is easily extensible to panoptic segmentation, with competitive results. In addition, it achieves significantly better performance on large objects than Faster R-CNN, likely thanks to the processing of global information performed by the self-attention.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-063",
+      "order": 63,
+      "section": "Conclusion",
+      "level": "section",
+      "type": "",
+      "text": "This new design for detectors also comes with new challenges, in particular regarding training, optimization and performances on small objects. Current detectors required several years of improvements to cope with similar issues, and we expect future work to successfully address them for DETR .",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-064",
+      "order": 64,
+      "section": "Acknowledgements",
+      "level": "section",
+      "type": "",
+      "text": "We thank Sainbayar Sukhbaatar, Piotr Bojanowski, Natalia Neverova, David Lopez-Paz, Guillaume Lample, Danielle Rothermel, Kaiming He, Ross Girshick, Xinlei Chen and the whole Facebook AI Research Paris team for discussions and advices without which this work would not be possible.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-065",
+      "order": 65,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "Since our model is based on the Transformer architecture, we remind here the general form of attention mechanisms we use for exhaustivity. The attention mechanism follows [cite:Vaswani2017AttentionIA], except for the details of positional encodings (see Equation [ref:eq:posenc]) that follows [cite:Cordonnier2019OnTR].",
+      "summary": "",
+      "figureRefs": [
+        "eq:posenc"
+      ],
+      "formulas": [
+        {
+          "raw": "\\text{\\rm mh-attn}:\\underbrace{X_{\\rm q}}_{d\\times N_{\\rm q}}, \\underbrace{X_{\\rm kv}}_{d\\times N_{\\rm kv}}, \\underbrace{T}_{M\\times 3\\times d' \\times d}, \\underbrace{L}_{d\\times d} \\mapsto \\underbrace{\\tilde{X}_{\\rm q}}_{d\\times N_{\\rm q}}",
+          "label": ""
+        },
+        {
+          "raw": "\\text{\\rm mh-s-attn}(X, T, L) = \\text{\\rm mh-attn}(X, X, T,L)\\,.\\label{eq:selfatt}",
+          "label": "eq:selfatt"
+        },
+        {
+          "raw": "X'_{\\rm q}&= [\\text{\\rm attn}(X_{\\rm q}, X_{\\rm kv}, T_1) ; ... ; \\text{\\rm attn}(X_{\\rm q}, X_{\\rm kv}, T_M)]\\\\ \\tilde{X}_{\\rm q} &= {\\rm layernorm}\\big(X_{\\rm q} + {\\rm dropout}(\\projX'_{\\rm q})\\big)\\,,\\label{eq:layernormresdropout}",
+          "label": "eq:layernormresdropout"
+        },
+        {
+          "raw": "[Q; K; V] = [T'_1 (X_{\\rm q}+P_{\\rm q});T'_2 (X_{\\rm kv}+P_{\\rm kv}); T'_3 X_{\\rm kv}]",
+          "label": ""
+        },
+        {
+          "raw": "\\alpha_{i,j} = \\frac{e^{\\frac{1}{\\sqrt{d'}}Q_i^TK_j}}{Z_i} \\text{~~where~} Z_i = \\sum_{j=1}^{N_{\\rm kv}} e^{\\frac{1}{\\sqrt{d'}}Q_i^TK_{j}}\\,.\\label{eq:posenc}",
+          "label": "eq:posenc"
+        }
+      ]
+    },
+    {
+      "id": "seg-066",
+      "order": 66,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Multi-head The general form of multi-head attention with ⟨M⟩ heads of dimension ⟨d⟩ is a function with the following signature (using ⟨d' = ⟩, and giving matrix/tensors sizes in underbrace)",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-067",
+      "order": 67,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨X_ q⟩ is the query sequence of length ⟨N_ q⟩, ⟨X_ kv⟩ is the key-value sequence of length ⟨N_ kv⟩ (with the same number of channels ⟨d⟩ for simplicity of exposition), ⟨T⟩ is the weight tensor to compute the so-called query, key and value embeddings, and ⟨L⟩ is a projection matrix. The output is the same size as the query sequence. To fix the vocabulary before giving details, multi-head self-attention (⟨ mh-s-attn⟩) is the special case ⟨X_ q = X_ kv⟩, i.e.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-068",
+      "order": 68,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "The multi-head attention is simply the concatenation of ⟨M⟩ single attention heads followed by a projection with ⟨L⟩. The common practice [cite:Vaswani2017AttentionIA] is to use residual connections, dropout and layer normalization. In other words, denoting ⟨ _ q = mh-attn(X_ q, X_ kv, T, L)⟩ and ⟨ ^(q)⟩ the concatenation of attention heads, we have",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-069",
+      "order": 69,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "where [;] denotes concatenation on the channel axis.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-070",
+      "order": 70,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Single head An attention head with weight tensor ⟨T' ^3 d' d⟩, denoted by ⟨ attn(X_ q, X_ kv, T')⟩, depends on additional positional encoding ⟨P_ q ^d N_ q⟩ and ⟨P_ kv ^d N_ kv⟩. \nIt starts by computing so-called query, key and value embeddings after adding the query and key positional encodings [cite:Cordonnier2019OnTR]:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-071",
+      "order": 71,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨T'⟩ is the concatenation of ⟨T'_1,T'_2,T'_3⟩. The attention weights ⟨ ⟩ are then computed based on the softmax of dot products between queries and keys, so that each element of the query sequence attends to all elements of the key-value sequence (⟨i⟩ is a query index and ⟨j⟩ a key-value index):",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-072",
+      "order": 72,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "In our case, the positional encodings may be learnt or fixed, but are shared across all attention layers for a given query/key-value sequence, so we do not explicitly write them as parameters of the attention. We give more details on their exact value when describing the encoder and the decoder. The final output is the aggregation of values weighted by attention weights: The ⟨i⟩-th row is given by \n⟨\n attn_i(X_ q, X_ kv, T') = _j=1^N_ kv _i,j V_j\n⟩.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-073",
+      "order": 73,
+      "section": "Preliminaries: Multi-head attention layers",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Feed-forward network (FFN) layers The original transformer alternates multi-head attention and so-called FFN layers [cite:Vaswani2017AttentionIA], which are effectively multilayer 1x1 convolutions, which have ⟨Md⟩ input and output channels in our case. The FFN we consider is composed of two-layers of 1x1 convolutions with ReLU activations. There is also a residual connection/dropout/layernorm after the two layers, similarly to [eq:eq:layernormresdropout].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-074",
+      "order": 74,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "For completeness, we present in detail the losses used in our approach. All losses are normalized by the number of objects inside the batch. Extra care must be taken for distributed training: since each GPU receives a sub-batch, \nit is not sufficient to normalize by the number of objects in the local batch, \nsince in general the sub-batches are not balanced across GPUs. \nInstead, it is important to normalize by the total number of objects in all sub-batches.",
+      "summary": "",
+      "figureRefs": [],
+      "formulas": [
+        {
+          "raw": "\\bloss{b_{\\sigma(i)}, \\hat{b}_i} = \\lambda_{\\rm iou}\\iouloss{b_{\\sigma(i)}, \\hat{b}_i} + \\lambda_{\\rm L1}||b_{\\sigma(i)}- \\hat{b}_i||_1\\,, \\label{eq:bloss}",
+          "label": "eq:bloss"
+        },
+        {
+          "raw": "\\iouloss{b_{\\sigma(i)}, \\hat{b}_i} = 1 - \\bigg(\\frac{ | b_{\\sigma(i)}\\cap \\hat{b}_i|}{|b_{\\sigma(i)}\\cup \\hat{b}_i|} - \\frac{|B(b_{\\sigma(i)},\\hat{b}_i) \\setminus b_{\\sigma(i)} \\cup \\hat{b}_i|}{|B(b_{\\sigma(i)},\\hat{b}_i)|}\\bigg)\\,.",
+          "label": ""
+        },
+        {
+          "raw": "\\diceloss{m, \\hat{m}} = 1 - \\frac{2 m\\sigma(\\hat{m}) + 1}{\\sigma(\\hat{m}) + m + 1}",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "seg-075",
+      "order": 75,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Box loss\n Similarly to [cite:RomeraParedes2015RecurrentIS,ren2017end], we use a soft version of Intersection over Union in our loss, together with a ⟨ _1⟩ loss on ⟨ ⟩:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-076",
+      "order": 76,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨ _ iou, _ L1 ⟩ are hyperparameters and ⟨ L_ iou( )⟩ is the generalized IoU [cite:Rezatofighi_2018_CVPR]:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-077",
+      "order": 77,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "⟨|.|⟩ means ``area'', and the union and intersection of box coordinates are used as shorthands for the boxes themselves. The areas of unions or intersections are computed by ⟨ / ⟩ of the linear functions of ⟨b_ (i)⟩ and ⟨ _i⟩, which makes the loss sufficiently well-behaved for stochastic gradients. ⟨B(b_ (i), _i)⟩ means the largest box containing ⟨b_ (i), _i⟩ (the areas involving ⟨B⟩ are also computed based on ⟨ / ⟩ of linear functions of the box coordinates).",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-078",
+      "order": 78,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n DICE/F-1 loss [cite:milletari2016v]\nThe DICE coefficient is closely related to the Intersection over Union. If we denote by ⟨ ⟩ the raw mask logits prediction of the model, and ⟨m⟩ the binary target mask, the loss is defined as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-079",
+      "order": 79,
+      "section": "Losses",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨ ⟩ is the sigmoid function. This loss is normalized by the number of objects.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-080",
+      "order": 80,
+      "section": "Detailed architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "The detailed description of the transformer used in DETR , with positional encodings passed at every attention layer, is given in Fig. [ref:fig:transformer].\nImage features from the CNN backbone are passed\nthrough the transformer encoder, together with spatial positional encoding\nthat are added to queries and keys at every multi-head self-attention layer.\nThen, the decoder receives queries (initially set to zero),\noutput positional encoding (object queries), and encoder memory, and produces the final\nset of predicted class labels and bounding boxes through multiple\nmulti-head self-attention and decoder-encoder attention.\nThe first self-attention layer in the first decoder layer can be skipped.",
+      "summary": "",
+      "figureRefs": [
+        "fig:transformer"
+      ],
+      "figures": [
+        {
+          "asset": "figures/transformer",
+          "caption": "Architecture of DETR 's transformer. Please, see Section [ref:sec:detailed_arch] for details.",
+          "label": "fig:transformer"
+        }
+      ]
+    },
+    {
+      "id": "seg-081",
+      "order": 81,
+      "section": "Detailed architecture",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Computational complexity\nEvery self-attention in the encoder has complexity ⟨ (d^2 HW+d(HW)^2)⟩: ⟨ (d' d)⟩ is the cost of computing a single query/key/value embeddings (and ⟨Md' = d⟩), while ⟨ (d'(HW)^2)⟩ is the cost of computing the attention weights for one head. Other computations are negligible. In the decoder, each self-attention is in ⟨ (d^2 N+d N^2)⟩, and cross-attention between encoder and decoder is in ⟨ (d^2(N+HW) + d NHW)⟩, which is much lower than the encoder since ⟨N HW⟩ in practice.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n FLOPS computation\nGiven that the FLOPS for Faster R-CNN depends on the number of proposals in the image, we report the average number of FLOPS for the first 100 images in the COCO 2017 validation set.\nWe compute the FLOPS with the tool flop_count_operators from Detectron2 [cite:wu2019detectron2]. We use it without modifications for Detectron2 models, and extend it to take batch matrix multiply (bmm) into account for DETR models.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-082",
+      "order": 82,
+      "section": "Training hyperparameters",
+      "level": "subsection",
+      "type": "",
+      "text": "We train DETR using AdamW [cite:Loshchilov2017DecoupledWD] with improved weight\ndecay handling, set to ⟨10^-4⟩.\nWe also apply gradient clipping, with a maximal gradient norm of ⟨0.1⟩.\nThe backbone and the transformers are treated slightly differently, we now discuss the details for both.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Backbone\nImageNet pretrained backbone ResNet-50 is imported from Torchvision, discarding the last classification layer.\nBackbone batch normalization weights and statistics are frozen during training,\nfollowing widely adopted practice in object detection.\nWe fine-tune the backbone using learning rate of ⟨10^-5⟩. We observe that having the backbone learning rate roughly an order of magnitude smaller than the rest of the network is important to stabilize training, especially in the first few epochs.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Transformer\nWe train the transformer with a learning rate of ⟨10^-4⟩.\nAdditive dropout of ⟨0.1⟩ is applied after every multi-head attention and FFN before layer normalization.\nThe weights are randomly initialized with Xavier initialization.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Losses We use linear combination of ⟨ _1⟩ and GIoU losses for bounding box regression with ⟨ _ L1 = 5⟩ and ⟨ _ iou = 2⟩ weights respectively. All models were trained with ⟨N=100⟩ decoder query slots.\n\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Baseline Our enhanced Faster-RCNN+ baselines use GIoU [cite:Rezatofighi_2018_CVPR] loss along with the standard ⟨ _1⟩ loss for bounding box regression. We performed a grid search to find the best weights for the losses and the final models use only GIoU loss with weights ⟨20⟩ and ⟨1⟩ for box and proposal regression tasks respectively. For the baselines we adopt the same data augmentation as used in DETR and train it with 9⟨ ⟩ schedule (approximately 109 epochs). All other settings are identical to the same models in the Detectron2 model zoo [cite:wu2019detectron2].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-083",
+      "order": 83,
+      "section": "Training hyperparameters",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Spatial positional encoding",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-084",
+      "order": 84,
+      "section": "Training hyperparameters",
+      "level": "subsection",
+      "type": "",
+      "text": "Encoder activations are associated with corresponding spatial positions of image features. In our model we use a fixed absolute encoding to represent these spatial positions. We adopt a generalization of the original Transformer [cite:Vaswani2017AttentionIA] encoding to the 2D case [cite:Parmar2018ImageT]. Specifically, for both spatial coordinates of each embedding we independently use ⟨ ⟩ sine and cosine functions with different frequencies. We then concatenate them to get the final ⟨d⟩ channel positional encoding.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-085",
+      "order": 85,
+      "section": "Additional results",
+      "level": "subsection",
+      "type": "",
+      "text": "Qualitative results of bounding box prediction DETR -512-DC5 model (odd rows) and\nFaster R-CNN R50-FPN+ model (even rows) can be found on Fig. [ref:fig:bbox_qualitative_0]-[ref:fig:bbox_qualitative_1].\nThe models achieve comparable AP on COCO val set, 42.5 and 42 AP respectively.\nWe show results on the last 65 COCO validation images, without cherry-picking.\nIn the case of DETR results, we supplement the image with the attention from the decoder, color coded for each instance.\nWe threshold Faster R-CNN predictions at 0.5 confidence and DETR predictions at 0.7 confidence.",
+      "summary": "",
+      "figureRefs": [
+        "fig:bbox_qualitative_0",
+        "fig:bbox_qualitative_1"
+      ],
+      "figures": [
+        {
+          "asset": "figures/Panoptic/1113_gt.jpg",
+          "caption": "Failure case with overlapping objects. PanopticFPN misses one\n plane entirely, while DETR fails to accurately segment 3 of them.",
+          "label": "fig:pano_quali_supl"
+        },
+        {
+          "asset": "figures/nbr_inst_fig.pdf",
+          "caption": "Analysis of the number of instances of various classes missed by DETR depending on how many are present in the image. We report the mean and the standard deviation. As the number of instances gets close to 100, DETR starts saturating and misses more and more objects",
+          "label": "fig:instances"
+        }
+      ]
+    },
+    {
+      "id": "seg-086",
+      "order": 86,
+      "section": "Additional results",
+      "level": "subsection",
+      "type": "",
+      "text": "Some extra qualitative results for the panoptic prediction of the DETR -R101 model are\nshown in Fig.[ref:fig:pano_quali_supl].",
+      "summary": "",
+      "figureRefs": [
+        "fig:pano_quali_supl"
+      ]
+    },
+    {
+      "id": "seg-087",
+      "order": 87,
+      "section": "Additional results",
+      "level": "subsection",
+      "type": "",
+      "text": "\\@startsectionsubsubsection4 @\n .5em \\@plus1ex \\@minus.1ex\n -.5em\n Increasing the number of instances",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-088",
+      "order": 88,
+      "section": "Additional results",
+      "level": "subsection",
+      "type": "",
+      "text": "By design, DETR cannot predict more objects than it has query slots, i.e. 100 in our experiments. In this section, we analyze the behavior of DETR when approaching this limit. We select a canonical square image of a given class, repeat it on a ⟨10 10⟩ grid, and compute the percentage of instances that are missed by the model. To test the model with less than 100 instances, we randomly mask some of the cells.\nThis ensures that the absolute size of the objects is the same no matter how many are visible. To account for the randomness in the masking, we repeat the experiment 100 times with different masks. The results are shown in Fig.[ref:fig:instances]. The behavior is similar across classes, and while the model detects all instances when up to 50 are visible, it then starts saturating and misses more and more instances. Notably, when the image contains all 100 instances, the model only detects 30 on average, which is less than if the image contains only 50 instances that are all detected. The counter-intuitive behavior of the model is likely because the images and the detections are far from the training distribution.",
+      "summary": "",
+      "figureRefs": [
+        "fig:instances"
+      ]
+    },
+    {
+      "id": "seg-089",
+      "order": 89,
+      "section": "Additional results",
+      "level": "subsection",
+      "type": "",
+      "text": "Note that this test is a test of generalization out-of-distribution by design, since there are very few example images with a lot of instances of a single class. It is difficult to disentangle, from the experiment, two types of out-of-domain generalization: the image itself vs the number of object per class. But since few to no COCO images contain only a lot of objects of the same class, this type of experiment represents our best effort to understand whether query objects overfit the label and position distribution of the dataset. Overall, the experiments suggests that the model does not overfit on these distributions since it yields near-perfect detections up to 50 objects.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-090",
+      "order": 90,
+      "section": "PyTorch inference code",
+      "level": "subsection",
+      "type": "",
+      "text": "To demonstrate the simplicity of the approach, we include inference code\nwith PyTorch and Torchvision libraries in Listing [ref:listing:code].\nThe code runs with Python 3.6+, PyTorch 1.4 and Torchvision 0.5. Note that it does not support batching, hence it is suitable only for inference or training with DistributedDataParallel with one image per GPU. Also note that for clarity, this code uses learnt positional encodings in the encoder instead of fixed, and positional encodings are added to the input only instead of at each transformer layer. Making these changes requires going beyond PyTorch implementation of transformers, which hampers readability. The entire code to reproduce the experiments will be made available before the conference.",
+      "summary": "",
+      "figureRefs": [
+        "listing:code"
+      ]
+    }
+  ],
+  "parseQuality": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "章节数",
+        "value": 23,
+        "threshold": ">= 4",
+        "pass": true
+      },
+      {
+        "name": "段落中位数",
+        "value": 524.0,
+        "threshold": "50 ~ 1500 字符",
+        "pass": true
+      },
+      {
+        "name": "超长段落",
+        "value": "0.0%",
+        "threshold": "> 4000 字符的段落 <= 10%",
+        "pass": true
+      },
+      {
+        "name": "表格残渣",
+        "value": 0,
+        "threshold": "== 0",
+        "pass": true
+      },
+      {
+        "name": "悬空引用",
+        "value": 2,
+        "threshold": "<= 2",
+        "pass": true
+      }
+    ],
+    "stats": {
+      "segments": 90,
+      "sections": 23,
+      "formulas": 10,
+      "figures": 11,
+      "tables": 5,
+      "tablesWithRows": 5,
+      "algorithms": 0,
+      "labels": 31,
+      "refs": 27,
+      "chars": 55167,
+      "medianPara": 524.0,
+      "dirtyParagraphs": 0
+    },
+    "danglingRefs": [
+      "fig:bbox_qualitative_0",
+      "fig:bbox_qualitative_1"
+    ]
+  }
+}

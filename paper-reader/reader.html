@@ -165,6 +165,23 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .chat { flex: 1; overflow-y: auto; padding: 24px 20px 40px; }
 .chat-inner { max-width: 780px; margin: 0 auto; }
 
+/* ---------- 已解析论文快捷入口 ---------- */
+.paper-picks {
+  display: grid; gap: 8px; max-width: 520px; margin: 20px auto 0; text-align: left;
+}
+.pick-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--card);
+  cursor: pointer; transition: border-color .16s, background .16s;
+  text-align: left; width: 100%; font-family: inherit;
+}
+.pick-item:hover { border-color: var(--clay); background: var(--clay-wash); }
+.pick-item:disabled { opacity: .5; cursor: wait; }
+.pick-name { font-size: 13.5px; color: var(--ink); line-height: 1.45; }
+.pick-meta { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+.pick-go { font-size: 12px; color: var(--clay); flex-shrink: 0; }
+
 /* ---------- 空状态 ---------- */
 .empty {
   text-align: center; padding: 80px 20px; color: var(--faint);
@@ -396,10 +413,20 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
     <div class="chat-inner" id="chatInner">
       <div class="empty">
         <h2>先加载一篇论文</h2>
-        <p>用解析脚本跑出 <code>paper.json</code>，然后在这里选中它。</p>
-        <p style="font-size:12.5px;">命令：<code>python m0_fetch_parse.py 1512.03385</code></p>
+        <p>下面这些是已经解析好的，点一下就打开。</p>
+
+        <div class="paper-picks" id="paperPicks"></div>
+
+        <p style="font-size:12.5px;margin-top:22px;">
+          要读别的论文？先跑一次解析脚本（只需一次），再手动选文件。
+        </p>
+        <p style="font-size:12.5px;">
+          <code>python m0_fetch_parse.py 2206.02066</code>　arXiv 论文<br />
+          <code>python parse_local.py "论文.pdf"</code>　本地 PDF
+        </p>
+
         <div class="drop" id="drop">
-          <div style="font-size:14px;color:var(--ink-2);font-weight:600;">点击选择 paper.json</div>
+          <div style="font-size:14px;color:var(--ink-2);font-weight:600;">手动选择 paper.json</div>
           <div style="font-size:12.5px;margin-top:6px;">也可以把文件拖到这里</div>
         </div>
         <input type="file" id="fileInput" accept=".json,application/json" hidden />
@@ -1619,6 +1646,67 @@ document.getElementById("toc").addEventListener("click", function (event) {
 });
 
 /* ============================================================
+   已解析论文的快捷入口
+   线上（http）可以直接 fetch 同目录的 paper.json；
+   本地双击打开时浏览器禁止读本地文件，会回退到手动选择。
+   ============================================================ */
+
+const READY_PAPERS = [
+  { slug: "2206.02066", title: "PIDNet", meta: "实时语义分割 · 45 段 · 建议从这里开始" },
+  { slug: "2511.16719", title: "SAM 3", meta: "分割大模型 · 268 段 · 20 万字" },
+  { slug: "2508.10104", title: "DINOv3", meta: "视觉基础模型 · 176 段 · 14 万字" },
+  { slug: "2608.00927", title: "AgriJetsonBench", meta: "Jetson 端侧基准 · 179 段" },
+  { slug: "1512.03385", title: "ResNet", meta: "残差网络 · 79 段" },
+  { slug: "2010.11929", title: "ViT", meta: "Vision Transformer · 78 段" },
+  { slug: "2005.12872", title: "DETR", meta: "端到端目标检测 · 97 段" },
+];
+
+function renderPaperPicks() {
+  const host = document.getElementById("paperPicks");
+  if (!host) return;
+
+  host.innerHTML = READY_PAPERS.map(function (item) {
+    return '<button class="pick-item" data-slug="' + item.slug + '">' +
+             "<div>" +
+               '<div class="pick-name">' + escapeHtml(item.title) + "</div>" +
+               '<div class="pick-meta">' + escapeHtml(item.meta) + "</div>" +
+             "</div>" +
+             '<span class="pick-go">打开 →</span>' +
+           "</button>";
+  }).join("");
+
+  host.addEventListener("click", function (event) {
+    const btn = event.target.closest("[data-slug]");
+    if (!btn) return;
+    loadPaperBySlug(btn.getAttribute("data-slug"), btn);
+  });
+}
+
+async function loadPaperBySlug(slug, btn) {
+  const original = btn.querySelector(".pick-go").textContent;
+  btn.querySelector(".pick-go").textContent = "读取中…";
+  btn.disabled = true;
+
+  try {
+    const response = await fetch("out/" + slug + "/paper.json");
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const json = await response.json();
+    loadPaper(json);
+  } catch (err) {
+    btn.querySelector(".pick-go").textContent = original;
+    btn.disabled = false;
+    alert(
+      "自动读取失败。\n\n" +
+      "如果你是在本地双击打开的 reader.html，浏览器不允许网页读取同目录文件，" +
+      "这是安全限制，不是 bug。\n\n" +
+      "解决办法二选一：\n" +
+      "1. 点下面「手动选择 paper.json」，找到 out/" + slug + "/paper.json\n" +
+      "2. 把整个目录用本地服务打开（python -m http.server）"
+    );
+  }
+}
+
+/* ============================================================
    启动
    ============================================================ */
 
@@ -1629,6 +1717,7 @@ state.config = loadConfig() || {
   depth: "进阶",
 };
 applyConfigToForm();
+renderPaperPicks();
 
 if (!state.config.apiKey) {
   document.getElementById("panel").classList.add("open");

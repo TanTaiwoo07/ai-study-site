@@ -12,6 +12,8 @@ Desktop.ini
 
 # 论文精读助手：缓存与输出不入库
 paper-reader/cache/
-paper-reader/out/
+# 解析产物：paper.json 入库（线上可直接加载），报告不入库
+paper-reader/out/**/report.txt
+paper-reader/out/**/source/
 __pycache__/
 *.pyc

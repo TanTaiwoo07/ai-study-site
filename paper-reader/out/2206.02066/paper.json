@@ -1,0 +1,1239 @@
+{
+  "id": "arxiv-2206.02066",
+  "sourceType": "latex",
+  "meta": {
+    "title": "PIDNet: A Real-time Semantic Segmentation Network Inspired by PID Controllers",
+    "authors": [
+      "Jiacong Xu",
+      "Zixiang Xiong",
+      "Shankar P. Bhattacharyya"
+    ],
+    "abstract": "Two-branch network architecture has shown its efficiency and effectiveness in real-time semantic segmentation tasks. However, direct fusion of high-resolution details and low-frequency context has the drawback of detailed features being easily overwhelmed by surrounding contextual information. This overshoot phenomenon limits the improvement of the segmentation accuracy of existing two-branch models. In this paper, we make a connection between Convolutional Neural Networks (CNN) and Proportional-Integral-Derivative (PID) controllers and reveal that a two-branch network is equivalent to a Proportional-Integral (PI) controller, which inherently suffers from similar overshoot issues. To alleviate this problem, we propose a novel three-branch network architecture: PIDNet, which contains three branches to parse detailed, context and boundary information, respectively, and employs boundary attention to guide the fusion of detailed and context branches. Our family of PIDNets achieve the best trade-off between inference speed and accuracy and their accuracy surpasses all the existing models with similar inference speed on the Cityscapes and CamVid datasets. Specifically, PIDNet-S achieves 78.6% mIOU with inference speed of 93.2 FPS on Cityscapes and 80.1% mIOU with speed of 153.7 FPS on CamVid.",
+    "rawAuthor": "Jiacong Xu \\qquad Zixiang Xiong \\qquad Shankar P. Bhattacharyya \\\\ Dept of ECE, Texas A\\&M University, College Station, TX 77843 \\\\ {\\tt\\small jxu155@jhu.edu, zx@ece.tamu.edu, spb@tamu.edu}",
+    "arxivId": "2206.02066",
+    "version": "",
+    "year": null,
+    "venue": "",
+    "peerReviewed": false
+  },
+  "map": {
+    "problem": "",
+    "claims": [],
+    "methodSteps": [],
+    "experiments": "",
+    "conclusions": [],
+    "limitations": []
+  },
+  "outline": [
+    {
+      "level": "section",
+      "title": "Introduction",
+      "segments": 5,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Related Work",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "High-accuracy Semantic Segmentation",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Real-time Semantic Segmentation",
+      "segments": 3,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Method",
+      "segments": 5,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "PIDNet: A Novel Three-branch Network",
+      "segments": 5,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Pag: Learning High-level Semantics Selectively",
+      "segments": 3,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "PAPPM: Fast Aggregation of Contexts",
+      "segments": 2,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Bag: Balancing the Details and Contexts",
+      "segments": 3,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Experiment",
+      "segments": 1,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Datasets",
+      "segments": 3,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Implementation Details",
+      "segments": 3,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Ablation Study",
+      "segments": 5,
+      "appendix": false
+    },
+    {
+      "level": "subsection",
+      "title": "Comparison",
+      "segments": 4,
+      "appendix": false
+    },
+    {
+      "level": "section",
+      "title": "Conclusion",
+      "segments": 1,
+      "appendix": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg-001",
+      "order": 1,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "Proportional-Integral-Derivative (PID) Controller is a classic concept that has been widely applied in modern dynamic systems and processes such as robotic manipulation [cite:pid_robot], chemical processes [cite:pid_chemical], and power systems [cite:pid_power]. Even though many advanced control strategies with better control performance have been developed in recent years, PID controller is still the go-to choice for most industry applications due to its simplicity and robustness. Furthermore, the idea of PID controller has been extended to many other areas. For example, researchers introduced the PID concept to image denoising [cite:pid_image], stochastic gradient decent [cite:pid_stochastic] and numerical optimization [cite:pid_pso] for better algorithm performance. In this paper, we devise a novel architecture for real-time semantic segmentation tasks by employing the basic concept of PID controller and demonstrate that the performance of our model surpasses all the previous works and achieves the best trade-off between inference speed and accuracy, as illustrated in Figure [ref:fig:score], by extensive experiments.",
+      "summary": "",
+      "figureRefs": [
+        "fig:score"
+      ],
+      "figures": [
+        {
+          "asset": "figs/cityscapes_score.png",
+          "caption": "The trade-off between inference speed and accuracy (reported) for real-time models on the Cityscapes [cite:cityscapes] test set. Blue stars refer to our models while green triangles represent others.",
+          "label": "fig:score"
+        },
+        {
+          "asset": "figs/overshoot.jpg",
+          "caption": "Overshoot issue for dynamic system (left ⟨|⟩) and image segmentation (⟨|⟩ right). Left ⟨|⟩: Step responses of PI and PID controllers for a second-order system; ⟨|⟩ Right: From the first row to the last row, the images are cropped from ground truth, outputs of DDRNet-23 [cite:ddrnet] and ADB-Bag-DDRNet-23 (ours), respectively.",
+          "label": "fig:overshoot"
+        }
+      ]
+    },
+    {
+      "id": "seg-002",
+      "order": 2,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "Semantic segmentation is a fundamental task for visual scene parsing with the objective of assigning each pixel in the input image to a specific class label. \nWith the increasing demand of intelligence, semantic segmentation has become the basic perception component for applications such as autonomous driving [cite:ss_auto], medical imaging diagnosis [cite:ss_medical] and remote sensing imagery[cite:ss_remote]. \nStarting from FCN [cite:fcn], which achieved great improvement over traditional methods, deep convnets gradually dominated the semantic segmentation field and many representative models have been proposed [cite:unet, segnet, deeplab, pspnet,hrnet,transformer]. \nFor better performance, various strategies were introduced to equip these models with the capability of learning contextual dependencies among pixels in large scale without missing important details. \nEven though these models achieve encouraging segmentation accuracy, too much computational cost are required, which significantly hinder their application in real-time scenarios, such as autonomous vehicle [cite:ss_auto] and robot surgery [cite:surgery].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-003",
+      "order": 3,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "To meet real-time or mobile requirements, researchers have come up with many efficient and effective models in the past for semantic segmentation. Specifically, ENet [cite:enet] adopted lightweight decoder and downsampled the feature maps in early stages. ICNet [cite:icnet] encoded small-size inputs in complex and deep path to parse the high-level semantics. MobileNets [cite:mobilenets, mobilenetv2] replaced traditional convolutions with depth-wise separable convolutions. These early works reduced the latency and memory usage of segmentation models, but low accuracy significantly limits their real-world application. Recently, many novel and promising models based on Two-Branch Network (TBN) architecture have been proposed in the literature and achieve SOTA trade-off between speed and accuracy [cite:bisenet,fast_scnn, contextnet, stdc, ddrnet].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-004",
+      "order": 4,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "In this paper, we view the architecture of TBNs from the prospective of PID controller and point out that a TBN is equivalent to a PI controller, which suffers from the overshoot issue as illustrated in Figure [ref:fig:overshoot]. \nTo alleviate this problem, we devise a novel three-branch network architecture, namely PIDNet, and demonstrate its superiority on Cityscapes [cite:cityscapes], CamVid [cite:camvid] and PASCAL Context [cite:pascal_context] datasets. We also provide ablation study and feature visualization for better understanding of the functionality of each module in PIDNet. The source code can be accessed via:",
+      "summary": "",
+      "figureRefs": [
+        "fig:overshoot"
+      ]
+    },
+    {
+      "id": "seg-005",
+      "order": 5,
+      "section": "Introduction",
+      "level": "section",
+      "type": "",
+      "text": "The main contributions of this paper are three-fold:\n \n We make a connection between deep CNN and PID controller and propose a family of three-branch networks based on the PID controller architecture. \n Efficient modules, such as Bag fusion module designed to balance detailed and context features, are proposed to boost the performance of PIDNets. \n PIDNet achieves the best trade-off between inference speed and accuracy among all the existing models. In particular, PIDNet-S achieves ⟨78.6%⟩ mIOU with speed of ⟨93.2⟩ FPS and PIDNet-L presents the highest accuracy (⟨80.6%⟩ mIOU) in real-time doman on Cityscapes test set without acceleration tools.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-006",
+      "order": 6,
+      "section": "Related Work",
+      "level": "section",
+      "type": "",
+      "text": "Representative methods towards high-accuracy and real-time requirements are discussed separately in this section.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-007",
+      "order": 7,
+      "section": "High-accuracy Semantic Segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "Early approaches for semantic segmentation were based on an encoder-decoder architecture [cite:fcn, unet, segnet], where the encoder gradually enlarges its receptive field by strided convolutions or pooling operations and the decoder recovers detailed information from high-level semantics using deconvolutions or upsampling. \nHowever, spatial details could be easily ignored in the process of downsampling for encoder-decoder network. To alleviate this problem, dilated convolution [cite:dilated] was proposed to enlarge the field of view without reducing the spatial resolution. Based on this, DeepLab series [cite:deeplabv2,deeplabv3,deeplabv3+] achieved great improvement over previous works by employing dilated convolution with different dilation rates in the network. Note that dilated convolution is not suitable for hardware implementation due to its non-contiguous memory accesses. \nPSPNet [cite:pspnet] introduced a pyramid pooling module (PPM) to parse multi-scale context information and HRNet [cite:hrnet] utilized multiple paths and bilateral connections to learn and fuse the representations in different scales. Inspired from the long-range dependency parsing ability of attention mechanism [cite:attention] for language machine, non-local operation [cite:nonlocal] was introduced into computer vision and led to many accurate models [cite:danet, ccnet, ocr].",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-008",
+      "order": 8,
+      "section": "Real-time Semantic Segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "Many network architectures have been proposed to achieve the best trade-off between inference speed and accuracy, which could be roughly summarized as below.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-009",
+      "order": 9,
+      "section": "Real-time Semantic Segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "Light-weight encoder and decoder\nSwiftNet [cite:swiftnet] employed one low-resolution input to obtain high-level semantics and another high-resolution input to provide sufficient details for its lightweight decoder. DFANet [cite:dfanet] introduced a light-weight backbone by modifying the architecture of Xception [cite:xception], which was based on depth-wise separable convolution, and reduced the input size for faster inference speed. \nShuffleSeg [cite:shuffleseg] adopted ShuffleNet [cite:shufflenet], which combined channel shuffling and group convolution, as its backbone to reduce the computational cost. However, most of these networks are still in the form of encoder-decoder architecture and they require the information flow go through the deep encoder and then reverse back to pass the decoder, which introduces too much latency. Besides, since the optimization for depth-wise separable convolution on GPU is not mature, traditional convolution presents faster speed while having more FLOPs and parameters [cite:swiftnet]. Thus, we seek for more efficient model that avoids convolution factorization and encoder-decoder architecture.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-010",
+      "order": 10,
+      "section": "Real-time Semantic Segmentation",
+      "level": "subsection",
+      "type": "",
+      "text": "Two-branch network architecture\nContextual dependency can be extracted by large receptive field, and spatial details are vital for boundary delineation and small-scale object recognition. To take both sides into account, authors of BiSeNet [cite:bisenet] proposed a two-branch network (TBN) architecture, which contains two branches with different depths for context embedding and detail parsing along with a feature fusion module (FFM) to fuse the context and detailed information. \nSeveral follow-up works based on this architecture have been proposed to boost its representation ability or reduce its model complexity [cite:fast_scnn, contextnet, bisenetv2]. Specifically, DDRNet [cite:ddrnet] introduced bilateral connections to enhance information exchange between context and detailed branches, achieving state-of-the-art results in real-time semantic segmentation. Nevertheless, direct fusion of original detailed semantics and low-frequency context information has the risk of that object boundaries being overly corroded by surrounding pixels and small objects being overwhelmed by adjacent large ones (as shown in Figure [ref:fig:overshoot] and [ref:fig:pid_ana]).",
+      "summary": "",
+      "figureRefs": [
+        "fig:overshoot",
+        "fig:pid_ana"
+      ]
+    },
+    {
+      "id": "seg-011",
+      "order": 11,
+      "section": "Method",
+      "level": "section",
+      "type": "",
+      "text": "A PID controller contains three components: a proportional (P) controller, an integral (I) controller and a derivative (D) controller, as illustrated in Figure [ref:fig:pid_ana]-Upper. The implementation of PI controller could be written as:",
+      "summary": "",
+      "figureRefs": [
+        "fig:pid_ana"
+      ],
+      "figures": [
+        {
+          "asset": "figs/analogy.png",
+          "caption": "Upper ⟨|⟩: The analogy between PID controller and proposed network; ⟨|⟩ Bottom: Left: Zero out surrounding mask area and calculate the similarity between current and original features for each pixel; Right: From the first to the last column, the images refer to ground truth, predictions of all branches, the detailed branch only, and the context branch only of DDRNet-23.",
+          "label": "fig:pid_ana"
+        },
+        {
+          "asset": "figs/PIDNet_Arch.png",
+          "caption": "An overview of the basic architecture of our proposed Proportional-Integral-Derivative Network (PIDNet). S and B denote semantic and boundary, and Add and Up refer to element-wise summation and bilinear Upsampling operation, respectively; BAS-Loss represents the boundary-awareness CE loss [cite:boundary-aware]. Dashed lines and associate blocks will be ignored in the inference stage.",
+          "label": "fig:pidnet"
+        }
+      ],
+      "formulas": [
+        {
+          "raw": "\\label{pi} c_{out}[n]=k_{p}e[n]+k_{i}\\sum^{n}_{i=0}e[i]",
+          "label": "pi"
+        },
+        {
+          "raw": "\\label{conv3_d} O_{D}[i]=K^{D}_{i-3}I[i-3]+...+K^{D}_{i}I[i]+...+K^{D}_{i+3}I[i+3]",
+          "label": "conv3_d"
+        },
+        {
+          "raw": "\\label{conv3_c} O_{C}[i]=K^{C}_{i-7}I[i-7]+...+K^{C}_{i}I[i]+...+K^{C}_{i+7}I[i+7]",
+          "label": "conv3_c"
+        },
+        {
+          "raw": "\\label{pid_z} C(z)=k_p+k_i(1-e^{-j\\omega})^{-1}+k_d(1-e^{-j\\omega})",
+          "label": "pid_z"
+        }
+      ]
+    },
+    {
+      "id": "seg-012",
+      "order": 12,
+      "section": "Method",
+      "level": "section",
+      "type": "",
+      "text": "P controller focuses on current signal, while I controller accumulates all the past signals. Due to the inertia effect of accumulation, overshoot will happen to the output of simple PI controller when the signal changes oppositely. Then, D controller was introduced and if the signal become smaller, the D component will become negative and serves as a damper to reduce the overshoot. Similarly, TBNs parse the context and detailed information by multiple convolutional layers with and without strides, respectively. Consider a simple 1D example, where both detailed and context branches consist of 3 layers without BNs and ReLUs. Then, the output maps can be calculated as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-013",
+      "order": 13,
+      "section": "Method",
+      "level": "section",
+      "type": "",
+      "text": "where, ⟨K^D_i=k_31k_22k_13+k_31k_23k_12+k_32k_21k_13+k_32k_22k_12+k_32k_23k_13+k_33k_21k_12+k_33k_22k_11⟩ and ⟨K^C_i=k_32k_22k_12⟩. Here, ⟨k_mn⟩ refers to the ⟨n⟩-th value of the kernel in layer ⟨m⟩. Since ⟨|k_mn|⟩ are mostly distributed in ⟨(0, 0.01)⟩ (92% for DDRNet-23) and are bounded by 1, the coefficient for each item will decrease exponentially with more layers. Thus, for each input vector, a larger number of items means a higher possibility to contribute to the final output. For detail branch, ⟨I[i-1]⟩, ⟨I[i]⟩, and ⟨I[i+1]⟩ occupy over 70% of the total items, which means that the detail branch focuses more on the local information. On the contrary, ⟨I[i-1]⟩, ⟨I[i]⟩, and ⟨I[i+1]⟩ only occupies less than 26% of the total items in context branch, so the context branch emphasizes the surrounding information. Figure [ref:fig:pid_ana]-Bottom shows that the context branch is less sensitive to the change of local information than the detail branch. The behavior of detail and context branches in the spatial domain is similar to the P (current) and I (all previous) controllers in time domain.",
+      "summary": "",
+      "figureRefs": [
+        "fig:pid_ana"
+      ]
+    },
+    {
+      "id": "seg-014",
+      "order": 14,
+      "section": "Method",
+      "level": "section",
+      "type": "",
+      "text": "Replace ⟨z^-1⟩ by ⟨e^-j ⟩ in the z-transform of a PID controller, which could be represented as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-015",
+      "order": 15,
+      "section": "Method",
+      "level": "section",
+      "type": "",
+      "text": "when the input frequency ⟨ ⟩ increases, the gain of I and D controllers will becomes smaller and larger, respectively, so the P, I, and D controllers work as allpass, lowpass filter, and highpass filter. Since PI controller focuses more on the low-frequency part of the input signal and cannot react immediately to the rapid change of the signal, it inherently suffers from the overshoot problem. The D controller reduces the overshoot by enabling the control output sensitive to the change of input signal. Figure [ref:fig:pid_ana]-Bottom shows that the detail branch parses all kinds of semantic information even though not accurate, whereas the context branch aggregates the low-frequency context information and works similarly with a large averaging filter on semantics. Direct fusion of detailed and context information leads to missing of some detailed features. Thus, we conclude that TBN is equivalent to a PI controller in Fourier domain.",
+      "summary": "",
+      "figureRefs": [
+        "fig:pid_ana"
+      ]
+    },
+    {
+      "id": "seg-016",
+      "order": 16,
+      "section": "PIDNet: A Novel Three-branch Network",
+      "level": "subsection",
+      "type": "",
+      "text": "To mitigate the overshoot problem, we attach an auxiliary derivative branch (ADB) to the TBN to mimic the PID controller spatially and highlight the high-frequency semantic information. \nThe semantics for pixels inside each object are consistent and only become inconsistent along the boundary of adjacent objects, so the difference of semantics is nonzero only at the object boundary and the objective of ADB is boundary detection. Accordingly, we establish a new three-branch real-time semantic segmentation architecture, namely Proportional-Integral-Derivative Network (PIDNet), which is shown in Figure [ref:fig:pidnet].",
+      "summary": "",
+      "figureRefs": [
+        "fig:pidnet"
+      ],
+      "formulas": [
+        {
+          "raw": "\\label{bas} l_{3}=-\\sum_{i,c}\\{1: b_{i} > t\\}(s_{i,c}log\\hat{s_{i,c}})",
+          "label": "bas"
+        },
+        {
+          "raw": "\\label{loss} Loss = \\lambda_{0}l_{0} + \\lambda_{1}l_{1} + \\lambda_{2}l_{2} + \\lambda_{3}l_{3}",
+          "label": "loss"
+        }
+      ]
+    },
+    {
+      "id": "seg-017",
+      "order": 17,
+      "section": "PIDNet: A Novel Three-branch Network",
+      "level": "subsection",
+      "type": "",
+      "text": "PIDNet possesses three branches with complementary responsibilities: the proportional (P) branch parses and preserves detailed information in high-resolution feature maps; the integral (I) branch aggregates context information both locally and globally to parse long-range dependencies; and the derivative (D) branch extracts high-frequency features to predict boundary regions. \nAs [cite:ddrnet], we also adopt cascaded residual blocks [cite:resnet] as the backbone for hardware friendliness. \nBesides, the depths for the P, I and D branches are set to be moderate, deep and shallow for efficient implementation. Consequently, a family of PIDNets (PIDNet-S, M and L) are generated by deepening and widening the model.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-018",
+      "order": 18,
+      "section": "PIDNet: A Novel Three-branch Network",
+      "level": "subsection",
+      "type": "",
+      "text": "Following [cite:bisenetv2, ddrnet, sfnet], we place a semantic head at the output of the first Pag module to generate the extra semantic loss ⟨l_0⟩ for better optimization of entire network. Instead of dice loss [cite:crispy], weighted binary cross entropy loss ⟨l_1⟩ is adopted to deal with the imbalanced problem of boundary detection since coarse boundary is preferred to highlight the boundary region and enhance the features for small objects. ⟨l_2⟩ and ⟨l_3⟩ represents the CE loss, while we utilize the boundary-awareness CE loss [cite:boundary-aware] for ⟨l_3⟩ using the output of boundary head to coordinate semantic segmentation and boundary detection tasks and enhance the function of Bag module. The calculation of BAS-Loss can be written as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-019",
+      "order": 19,
+      "section": "PIDNet: A Novel Three-branch Network",
+      "level": "subsection",
+      "type": "",
+      "text": "where t refers to predefined threshold and ⟨b_i⟩, ⟨s_i,c⟩ and ⟨ s_i,c⟩ are the output of boundary head, segmentation ground-truth and prediction result of the i-th pixel for class c, respectively. Therefore, the final loss for PIDNet is:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-020",
+      "order": 20,
+      "section": "PIDNet: A Novel Three-branch Network",
+      "level": "subsection",
+      "type": "",
+      "text": "Empirically, we set the parameters for the training loss of PIDNet as ⟨ _0=0.4⟩, ⟨ _1=20⟩, ⟨ _2=1⟩, ⟨ _3=1⟩ and ⟨t=0.8⟩.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-021",
+      "order": 21,
+      "section": "Pag: Learning High-level Semantics Selectively",
+      "level": "subsection",
+      "type": "",
+      "text": "The lateral connection utilized in [cite:swiftnet, ddrnet, hrnet] enhances the information transmission between feature maps in different scales and improves the representation ability of their models. In PIDNet, the rich and accurate semantic information provided by I branch is crucial for detail parsing and boundary detection of the P and D branches, both of which contain relatively less layers and channels. Thus, we treat the I branch as the backup for other two branches and enable it to provide required information to them. Different from the D branch that directly adds the provided feature maps, we introduce a Pixel-attention-guided fusion module (Pag), which is shown in Figure [ref:fig:pag],",
+      "summary": "",
+      "figureRefs": [
+        "fig:pag"
+      ],
+      "figures": [
+        {
+          "asset": "figs/pag.png",
+          "caption": "Illustration of Pag module. ⟨ (x)⟩ denotes the Sigmoid function; The kernel sizes of all the convolutions here are ⟨1 1⟩.",
+          "label": "fig:pag"
+        }
+      ],
+      "formulas": [
+        {
+          "raw": "\\label{sig_pag} \\sigma=Sigmoid(f_{p}(\\Vec{v_{p}})\\cdot f_{i}(\\Vec{v_{i}}))",
+          "label": "sig_pag"
+        },
+        {
+          "raw": "\\label{pag} Out_{Pag}=\\sigma \\Vec{v_{i}} + (1-\\sigma)\\Vec{v_{p}}",
+          "label": "pag"
+        }
+      ]
+    },
+    {
+      "id": "seg-022",
+      "order": 22,
+      "section": "Pag: Learning High-level Semantics Selectively",
+      "level": "subsection",
+      "type": "",
+      "text": "for the P branch to selectively learn the useful semantic features from I branch without being overwhelmed.\nThe underlying concept for Pag is borrowed from attention mechanisms [cite:attention]. Define the vectors for the corresponding pixels in feature maps from the P and I branch as ⟨ v_p⟩ and ⟨ v_i⟩, respectively, then the output of the Sigmoid function could be represented as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-023",
+      "order": 23,
+      "section": "Pag: Learning High-level Semantics Selectively",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨ ⟩ indicates the possibility of these two pixels belonging to the same object. If ⟨ ⟩ is high, we trust ⟨ v_i⟩ more since the I branch is semantically rich and accurate, and vise versa. Thus, the output of the Pag can be written as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-024",
+      "order": 24,
+      "section": "PAPPM: Fast Aggregation of Contexts",
+      "level": "subsection",
+      "type": "",
+      "text": "For better global scene prior construction, PSPNet [cite:pspnet] introduced a pyramid pooling module (PPM), which concatenates multi-scale pooling maps before convolution layer to form local and global context representations. Deep Aggregation PPM (DAPPM) proposed by [cite:ddrnet] further improved the context embedding ability of PPM and showed superior performance.",
+      "summary": "",
+      "figureRefs": [],
+      "figures": [
+        {
+          "asset": "figs/pappm.png",
+          "caption": "The parallel structure of PAPPM. Avg (5,2) means average pooling with kernel size of 5⟨ ⟩5 and strides of 2.",
+          "label": "fig:pappm"
+        }
+      ]
+    },
+    {
+      "id": "seg-025",
+      "order": 25,
+      "section": "PAPPM: Fast Aggregation of Contexts",
+      "level": "subsection",
+      "type": "",
+      "text": "Nevertheless, the computation process of DAPPM cannot be parallelized regarding its depth, which is time-consuming and DAPPM contains too many channels for each scale, which may surpasses the representation ability of lightweight models. \nThus, we modify the connections in DAPPM to make it parallelizable, which is shown in Figure [ref:fig:pappm], and reduce the number of channels for each scale from 128 to 96. This new context harvesting module is called Parallel Aggregation PPM (PAPPM) and is applied in PIDNet-M and PIDNet-S to guarantee their speeds. For our deep model: PIDNet-L, we still choose the DAPPM considering its depth but reduce its number of channels for less computation and faster speed.",
+      "summary": "",
+      "figureRefs": [
+        "fig:pappm"
+      ]
+    },
+    {
+      "id": "seg-026",
+      "order": 26,
+      "section": "Bag: Balancing the Details and Contexts",
+      "level": "subsection",
+      "type": "",
+      "text": "Given the boundary features extracted by ADB, we employ boundary attention to guide the fusion of detailed (P) and context (I) representations. Specifically, we design a Boundary-attention-guided fusion module (Bag), shown in Figure [ref:fig:bag], to fill the high-frequency and low-frequency areas with detailed and context features, respectively. Note that the context branch is semantically accurate but it loses too much spatial and geometric details especially for the boundary region and small object. Thanks to the detailed branch, which preserves spatial details better, we force the model to trust the detailed branch more along the boundary region and utilize the context features to fill other areas.",
+      "summary": "",
+      "figureRefs": [
+        "fig:bag"
+      ],
+      "figures": [
+        {
+          "asset": "figs/BagFM.png",
+          "caption": "Single channel implementations of (a) Bag and (b) Light-Bag modules in extreme case. P, I and D refer to the outputs of detailed, context and boundary branches, respectively. ⟨ ⟩ denotes the output of Sigmoid function.",
+          "label": "fig:bag"
+        }
+      ],
+      "formulas": [
+        {
+          "raw": "\\label{sig_bag} \\boldsymbol{\\sigma}=Sigmoid(\\Vec{v_{d}})",
+          "label": "sig_bag"
+        },
+        {
+          "raw": "\\label{bag} Out_{bag}=f_{out}((1-\\boldsymbol{\\sigma})\\otimes \\Vec{v_{i}}+\\boldsymbol{\\sigma}\\otimes \\Vec{v_{p}})",
+          "label": "bag"
+        },
+        {
+          "raw": "\\label{light_bag} Out_{light}=f_{p}((1-\\boldsymbol{\\sigma})\\otimes \\Vec{v_{i}}+\\Vec{v_{p}})+f_{i}(\\boldsymbol{\\sigma}\\otimes \\Vec{v_{p}}+\\Vec{v_{i}})",
+          "label": "light_bag"
+        }
+      ]
+    },
+    {
+      "id": "seg-027",
+      "order": 27,
+      "section": "Bag: Balancing the Details and Contexts",
+      "level": "subsection",
+      "type": "",
+      "text": "Define the vectors for the corresponding pixels of P, I and D feature maps as ⟨ v_p⟩, ⟨ v_i⟩ and ⟨ v_d⟩, respectively, then the outputs of Sigmoid , Bag and Light-Bag could be represented as:",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-028",
+      "order": 28,
+      "section": "Bag: Balancing the Details and Contexts",
+      "level": "subsection",
+      "type": "",
+      "text": "where ⟨f⟩ refers to the composition of convolutions, batch normalizations and ReLUs. Even though we replace ⟨3 3⟩ convolutions in Bag by two ⟨1 1⟩ convolutions in Light-Bag, the functionalities of Bag and Light-Bag are similar, that is when ⟨ >0.5⟩ the model trusts more on detailed features, otherwise context information is preferred.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-029",
+      "order": 29,
+      "section": "Experiment",
+      "level": "section",
+      "type": "",
+      "text": "In this section, our models will be trained and tested on Cityscapes, CamVid and PASCAL Context benchmarks.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-030",
+      "order": 30,
+      "section": "Datasets",
+      "level": "subsection",
+      "type": "",
+      "text": "Cityscapes. Cityscapes [cite:cityscapes] is one of the most well-known urban scene parsing datasets, which contains 5000 images collected from the car perspective in different cities. These images are divided into sets with numbers of 2975, 500, and 1525 for training, validation and testing. The image resolution is 2048⟨ ⟩1024, which is challenging for real-time models. Only the fine annotated dataset is used here.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-031",
+      "order": 31,
+      "section": "Datasets",
+      "level": "subsection",
+      "type": "",
+      "text": "CamVid. CamVid [cite:camvid] provides 701 images of driving scenes, which is partitioned into 367, 101 and 233 for training, validation and test. The image resolution is of 960⟨ ⟩720 and the number of annotated categories is 32, of which 11 classes are used for fair comparison with previous works.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-032",
+      "order": 32,
+      "section": "Datasets",
+      "level": "subsection",
+      "type": "",
+      "text": "PASCAL Context. Semantic labeling for whole scene is provided in PASCAL Context [cite:pascal_context], which contains 4998 images for training and 5105 images for validation. While this dataset is mainly used for benchmarking high-accuracy models, we utilized it here to show the generalization ability of PIDNets. Both 59 and 60-class scenarios are evaluated.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-033",
+      "order": 33,
+      "section": "Implementation Details",
+      "level": "subsection",
+      "type": "",
+      "text": "Pretraining. Before fine-tuning our models, we pre-train them by ImageNet [cite:imagenet] as most of previous works doing [cite:ddrnet, hyperseg,swiftnet]. We remove the D branch and directly merge the features in final stage to construct the classification models. The total number of training epochs is 90 and the learning rate is scheduled to be 0.1 initially and multiplied by 0.1 at epoch 30 and 60. The images are randomly cropped into 224⟨ ⟩224 and flipped horizontally for data augmentation.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-034",
+      "order": 34,
+      "section": "Implementation Details",
+      "level": "subsection",
+      "type": "",
+      "text": "Training. Our training protocols are almost the same as previous works [cite:bisenet, ddrnet, stdc]. Specifically, we adopt the poly strategy to update the learning rate and random cropping, random horizontal flipping, and random scaling in the range of ⟨[0.5, 2.0]⟩ for data augmentation. The number of training epochs, the initial learning rate, weight decay, cropped size and batch size for Cityscapes, CamVid and PASCAL Context could be summarized as [484, ⟨1e^-2⟩, ⟨5e^-4⟩, 1024⟨ ⟩1024, 12], [200, ⟨1e^-3⟩, ⟨5e^-4⟩, 960⟨ ⟩720, 12] and [200, ⟨1e^-3⟩, ⟨1e^-4⟩, 520⟨ ⟩520, 16], respectively. Following [cite:bisenetv2, ddrnet], we fine-tune the Cityscapes pretrained models for CamVid and stop the training process when ⟨lr<5e^-4⟩ to avoid overfitting.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-035",
+      "order": 35,
+      "section": "Implementation Details",
+      "level": "subsection",
+      "type": "",
+      "text": "Inference. Before testing, our models are trained by both train and val set for Cityscapes and CamVid. We measure the inference speed on the platform consists of single RTX 3090, PyTorch 1.8, CUDA 11.2, cuDNN 8.0 and Windows-Conda environment. Using the measurement protocol proposed by [cite:fasterseg] and following [cite:ddrnet, swiftnet, msfnet], we integrate the batch normalization into the convolutional layers and set the batch size to be 1 for measurement of inference speed.",
+      "summary": "",
+      "figureRefs": []
+    },
+    {
+      "id": "seg-036",
+      "order": 36,
+      "section": "Ablation Study",
+      "level": "subsection",
+      "type": "",
+      "text": "ADB for Two-branch Networks. To demonstrate the effectiveness of PID methodology, we combine ADB and Bag with existing models. Here, two representative two-branch networks: BiSeNet [cite:bisenet] and DDRNet [cite:ddrnet] equipped with ADB and Bag are implemented and achieve much higher accuracy on Cityscapes val set compared with their original models, which is shown in Table [ref:tab:adb_bag]. However, additional computation significantly slow down their inference speed, which then triggers us to establish PIDNet.",
+      "summary": "",
+      "figureRefs": [
+        "tab:adb_bag"
+      ],
+      "figures": [
+        {
+          "asset": "figs/pag_map_sm.jpg",
+          "caption": "Feature visualization of Pag module. The maps in the first row from left to right are the original input image, P input, I input and output of Sigmoid function for the first Pag; The maps in the second row are groudtruth, P, I inputs and Sigmoid output for the second Pag; The third and fourth rows are for another image.",
+          "label": "fig:pag_map"
+        },
+        {
+          "asset": "figs/dfm_map.png",
+          "caption": "Feature visualization of Bag module. The maps in the first row from left to right are the original input image, ground truth, predictions of DDRNet-23 and PIDNet-M; The maps in the second row are P, I and D input and final output for Light-Pag in PIDNet-M; The third and fourth rows are for another image.",
+          "label": "fig:bag_map"
+        }
+      ],
+      "tables": [
+        {
+          "label": "tab:adb_bag",
+          "caption": "Ablation study of ADB-Bag for BiSeNet and DDRNet.",
+          "header": [
+            "Model",
+            "ADB-Bag",
+            "mIOU",
+            "FPS"
+          ],
+          "rows": [
+            [
+              "",
+              "w/o",
+              "w/",
+              "",
+              ""
+            ],
+            [
+              "BiSeNet(Res18)",
+              "",
+              "",
+              "75.4",
+              "63.2"
+            ],
+            [
+              "",
+              "",
+              "",
+              "76.7",
+              "52.1"
+            ],
+            [
+              "DDRNet-23",
+              "",
+              "",
+              "79.5",
+              "51.4"
+            ],
+            [
+              "",
+              "",
+              "",
+              "80.0",
+              "39.2"
+            ]
+          ],
+          "columnCount": 5
+        },
+        {
+          "label": "tab:pag_bag",
+          "caption": "Ablation study of Pag and Bag on PIDNet-L. IM refers to ImageNet [cite:imagenet] pretraining, Add represents the element-wise summation operation and None means there is no lateral connection.",
+          "header": [
+            "IM",
+            "Lateral",
+            "",
+            "Fusion",
+            "mIOU"
+          ],
+          "rows": [
+            [
+              "",
+              "None",
+              "Add",
+              "Pag",
+              "",
+              "Add",
+              "Bag",
+              ""
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "79.3"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "78.1"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "80.0"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "80.7"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "80.5"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "80.5"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "80.9"
+            ]
+          ],
+          "columnCount": 8
+        },
+        {
+          "label": "tab:pappm_bag",
+          "caption": "Ablation study of PAPPM and Light-Bag on PIDNet-S.",
+          "header": [
+            "PPM",
+            "",
+            "Fusion",
+            "mIOU",
+            "FPS"
+          ],
+          "rows": [
+            [
+              "DAPPM",
+              "PAPPM",
+              "",
+              "Add",
+              "Bag",
+              "",
+              ""
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "78.8",
+              "83.7"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "78.4",
+              "97.8"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "78.8",
+              "93.2"
+            ]
+          ],
+          "columnCount": 7
+        },
+        {
+          "label": "tab:loss",
+          "caption": "Ablation study of extra losses and OHEM for PIDNet-L.",
+          "header": [
+            "Extra Loss",
+            "OHEM",
+            "mIOU"
+          ],
+          "rows": [
+            [
+              "⟨l_0⟩",
+              "⟨l_1⟩",
+              "⟨l_3⟩",
+              "",
+              ""
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "78.6"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "78.8"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "79.9"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "80.5"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "80.9"
+            ]
+          ],
+          "columnCount": 5
+        }
+      ]
+    },
+    {
+      "id": "seg-037",
+      "order": 37,
+      "section": "Ablation Study",
+      "level": "subsection",
+      "type": "",
+      "text": "Collaboration of Pag and Bag. P branch utilizes Pag module to learn useful information from I branch without being overwhelmed before fusion stage and Bag module is introduced to guide the fusion of detailed and context features. As Table [ref:tab:pag_bag] shows, lateral connection could significantly improve the model accuracy and pretraining could further boost its performance.",
+      "summary": "",
+      "figureRefs": [
+        "tab:pag_bag"
+      ]
+    },
+    {
+      "id": "seg-038",
+      "order": 38,
+      "section": "Ablation Study",
+      "level": "subsection",
+      "type": "",
+      "text": "In our scenario, the combinations of Add lateral connection and Bag fusion module or Pag lateral connection and Add fusion module make little sense since preservation of details should be consistent in the entire network. Thus, we only need to compare the performance of Add + Add and Pag + Bag and the experimental results in Table [ref:tab:pag_bag] and [ref:tab:pappm_bag] demonstrate the superiority of the collaboration of Pag and Bag (or Light-Bag). The visualization of feature maps in Figure [ref:fig:pag_map] shows that the small objects become much darker compared with large objects in the Sigmoid map for second Pag, where I branch loses more detailed information. Also, the features in boundary regions and small objects are greatly enhanced in the output of Bag module, which is illustrated in Figure [ref:fig:bag_map] and explains the reason why we choose coarse boundary detection.",
+      "summary": "",
+      "figureRefs": [
+        "tab:pag_bag",
+        "tab:pappm_bag",
+        "fig:pag_map",
+        "fig:bag_map"
+      ]
+    },
+    {
+      "id": "seg-039",
+      "order": 39,
+      "section": "Ablation Study",
+      "level": "subsection",
+      "type": "",
+      "text": "Efficiency of PAPPM. For real-time models, a heavy context aggregation module could drastically slow down the inference speed and may surpass the representation ability of the network. Thus, we proposed the PAPPM, which is constituted by parallel structure and small number of parameters. The experimental results in Table [ref:tab:pappm_bag] show that PAPPM achieves the same accuracy as DAPPM [cite:ddrnet] but presents a speed-up of 9.5 FPS for our light-weight model.",
+      "summary": "",
+      "figureRefs": [
+        "tab:pappm_bag"
+      ]
+    },
+    {
+      "id": "seg-040",
+      "order": 40,
+      "section": "Ablation Study",
+      "level": "subsection",
+      "type": "",
+      "text": "Effectiveness of Extra losses. Three extra losses were introduced to PIDNet to boost the optimization of entire network and emphasize the functionality for each components. According to Table [ref:tab:loss], boundary loss ⟨l_1⟩ and boundary-awareness loss ⟨l_3⟩ are necessary for better performance, especially the boundary loss (+1.1% mIOU), which strongly proves the necessity of D branch, and Online Hard Example Mining (OHEM) [cite:ohem] further improves the accuracy.",
+      "summary": "",
+      "figureRefs": [
+        "tab:loss"
+      ]
+    },
+    {
+      "id": "seg-041",
+      "order": 41,
+      "section": "Comparison",
+      "level": "subsection",
+      "type": "",
+      "text": "CamVid. For CamVid [cite:camvid] dataset, only the accuracy of DDRNet is comparable with our models, so we test its speed on our platform with the same setting for fair comparison considering our platform is more advanced than theirs.",
+      "summary": "",
+      "figureRefs": [],
+      "tables": [
+        {
+          "label": "tab:camvid",
+          "caption": "Comparison of speed and accuracy on CamVid. The models pretrained by Cityscapes [cite:cityscapes] are marked with ; The inference speeds for models marked with * are tested on our platform.",
+          "header": [
+            "Model",
+            "mIOU",
+            "#FPS",
+            "GPU"
+          ],
+          "rows": [
+            [
+              "MSFNet [cite:msfnet]",
+              "75.4",
+              "91.0",
+              "GTX 2080Ti"
+            ],
+            [
+              "PP-LiteSeg-T [cite:ppseg]",
+              "75.0",
+              "154.8",
+              "GTX 1080Ti"
+            ],
+            [
+              "TD2-PSP50 [cite:td_psp]",
+              "76.0",
+              "11.0",
+              "TITAN X"
+            ],
+            [
+              "BiSeNetV2 [cite:bisenetv2]",
+              "76.7",
+              "124.0",
+              "GTX 1080Ti"
+            ],
+            [
+              "BiSeNetV2-L [cite:bisenetv2]",
+              "78.5",
+              "33.0",
+              "GTX 1080Ti"
+            ],
+            [
+              "HyperSeg-S [cite:hyperseg]",
+              "78.4",
+              "38.0",
+              "GTX 1080Ti"
+            ],
+            [
+              "HyperSeg-L [cite:hyperseg]",
+              "79.1",
+              "16.6",
+              "GTX 1080Ti"
+            ],
+            [
+              "DDRNet-23-S [cite:ddrnet]",
+              "78.6",
+              "182.4",
+              "RTX 3090"
+            ],
+            [
+              "DDRNet-23 [cite:ddrnet]",
+              "80.6",
+              "116.8",
+              "RTX 3090"
+            ],
+            [
+              "PIDNet-S",
+              "80.1",
+              "153.7",
+              "RTX 3090"
+            ],
+            [
+              "PIDNet-S-Wider",
+              "82.0",
+              "85.6",
+              "RTX 3090"
+            ]
+          ],
+          "columnCount": 4
+        },
+        {
+          "label": "tab:cityscapes",
+          "caption": "Comparison of speed and accuracy on Cityscapes. The models pretrained by other segmentation datasets are marked with ; The inference speeds for models marked with * are tested on our platform. The GFLOPs for PIDNet is derived based on full-resolution input.",
+          "header": [],
+          "rows": [],
+          "columnCount": 0
+        },
+        {
+          "label": "tab:pascal",
+          "caption": "Comparison of accuracy on Pascal-Context (w/ and w/o background class). D-Res-101 refers to Dilated ResNet-101.",
+          "header": [
+            "Model",
+            "BaseNet",
+            "mIOU-59",
+            "mIOU-60"
+          ],
+          "rows": [
+            [
+              "DeepLab-v2[cite:deeplabv2]",
+              "D-Res-101",
+              "-",
+              "45.7"
+            ],
+            [
+              "RefineNet [cite:refinenet]",
+              "Res-152",
+              "-",
+              "47.3"
+            ],
+            [
+              "PSPNet [cite:pspnet]",
+              "D-Res-101",
+              "47.8",
+              "-"
+            ],
+            [
+              "Ding et al. [cite:ding2018context]",
+              "D-Res-101",
+              "51.6",
+              "-"
+            ],
+            [
+              "EncNet [cite:encnet]",
+              "D-Res-101",
+              "52.6",
+              "-"
+            ],
+            [
+              "HRNet [cite:hrnet]",
+              "V2-W48",
+              "54.0",
+              "48.3"
+            ],
+            [
+              "PIDNet-M",
+              "-",
+              "51.0",
+              "46.0"
+            ],
+            [
+              "PIDNet-L",
+              "-",
+              "51.9",
+              "46.6"
+            ]
+          ],
+          "columnCount": 4
+        }
+      ]
+    },
+    {
+      "id": "seg-042",
+      "order": 42,
+      "section": "Comparison",
+      "level": "subsection",
+      "type": "",
+      "text": "The experimental results in Table [ref:tab:camvid] show that the accuracy of all our models exceeds 80% mIOU and PIDNet-S-Wider, which simply doubles the number of channels for PIDNet-S, achieves the highest accuracy with a big margin ahead of previous models. Besides, the accuracy of PIDNet-S surpasses previous state-of-art model: DDRNet-23-S by 1.5% mIOU with only around 1 ms latency increase.",
+      "summary": "",
+      "figureRefs": [
+        "tab:camvid"
+      ]
+    },
+    {
+      "id": "seg-043",
+      "order": 43,
+      "section": "Comparison",
+      "level": "subsection",
+      "type": "",
+      "text": "Cityscapes. Previous real-time works treat Cityscapes [cite:cityscapes] as the standard benchmark considering its high-quality annotation. As shown in Table [ref:tab:cityscapes], we test the inference speeds of the models published in recent two years on the same platform without any acceleration tool as PIDNets for fair comparison. The experimental results show that PIDNets achieve the best trade-off between inference speed and accuracy. Specifically, PIDNet-L surpasses SFNet(ResNet-18) and DDRNet-39 in terms of speed and accuracy and becomes the most accurate model in real-time domain by rising the test accuracy from 80.4% to 80.64% mIOU. PIDNet-M and PIDNet-S also provide much higher accuracy compared with other models with similar inference speeds. Removing Pag and Bag modules from PIDNet-S, we provide an even faster option: PIDNet-S-Simple, which has weaker generalization ability but still presents highest accuracy among models with latency less than 10 ms.",
+      "summary": "",
+      "figureRefs": [
+        "tab:cityscapes"
+      ]
+    },
+    {
+      "id": "seg-044",
+      "order": 44,
+      "section": "Comparison",
+      "level": "subsection",
+      "type": "",
+      "text": "PASCAL Context. The ⟨Avg (17,8)⟩ path in PAPPM is removed since the image size is too small in PASCAL Context [cite:pascal_context]. Different from other two datasets, multi-scale and flip inference are utilized here for fair comparison with previous models. Even though there are less detailed annotations in PASCAL Context compared with previous two datasets, our models still achieve competitive performance among existing heavy networks, as shown in Table [ref:tab:pascal].",
+      "summary": "",
+      "figureRefs": [
+        "tab:pascal"
+      ]
+    },
+    {
+      "id": "seg-045",
+      "order": 45,
+      "section": "Conclusion",
+      "level": "section",
+      "type": "",
+      "text": "This paper presents a novel three-branch network architecture: PIDNet for real-time semantic segmentation. PIDNet achieves the best trade-off between inference time and accuracy. However, since PIDNet utilizes the boundary prediction to balance the detailed and context information, precise annotation around boundary, which usually requires a large amount of time, is preferred for better performance.",
+      "summary": "",
+      "figureRefs": []
+    }
+  ],
+  "readingPlan": {
+    "totalSegments": 45,
+    "totalChars": 25681,
+    "sections": [
+      {
+        "title": "Introduction",
+        "segments": 5,
+        "children": [],
+        "appendix": false,
+        "chars": 4406,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "Related Work",
+        "segments": 5,
+        "children": [
+          "High-accuracy Semantic Segmentation",
+          "Real-time Semantic Segmentation"
+        ],
+        "appendix": false,
+        "chars": 3966,
+        "role": "可略读",
+        "priority": "skim"
+      },
+      {
+        "title": "Method",
+        "segments": 18,
+        "children": [
+          "PIDNet: A Novel Three-branch Network",
+          "Pag: Learning High-level Semantics Selectively",
+          "PAPPM: Fast Aggregation of Contexts",
+          "Bag: Balancing the Details and Contexts"
+        ],
+        "appendix": false,
+        "chars": 9161,
+        "role": "必读",
+        "priority": "core"
+      },
+      {
+        "title": "Experiment",
+        "segments": 16,
+        "children": [
+          "Datasets",
+          "Implementation Details",
+          "Ablation Study",
+          "Comparison"
+        ],
+        "appendix": false,
+        "chars": 7746,
+        "role": "核心",
+        "priority": "core"
+      },
+      {
+        "title": "Conclusion",
+        "segments": 1,
+        "children": [],
+        "appendix": false,
+        "chars": 402,
+        "role": "必读",
+        "priority": "core"
+      }
+    ],
+    "summary": {
+      "coreSegments": 40,
+      "skimSegments": 5,
+      "optionalSegments": 0,
+      "skipSegments": 0,
+      "minCallsIfCoreOnly": 40,
+      "minCallsIfAll": 45
+    }
+  },
+  "parseQuality": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "章节数",
+        "value": 15,
+        "threshold": ">= 4",
+        "pass": true
+      },
+      {
+        "name": "段落中位数",
+        "value": 484,
+        "threshold": "50 ~ 1500 字符",
+        "pass": true
+      },
+      {
+        "name": "超长段落",
+        "value": "0.0%",
+        "threshold": "> 4000 字符的段落 <= 10%",
+        "pass": true
+      },
+      {
+        "name": "表格残渣",
+        "value": 0,
+        "threshold": "== 0",
+        "pass": true
+      },
+      {
+        "name": "悬空引用",
+        "value": 0,
+        "threshold": "<= 2",
+        "pass": true
+      }
+    ],
+    "stats": {
+      "segments": 45,
+      "sections": 15,
+      "formulas": 11,
+      "figures": 9,
+      "tables": 7,
+      "tablesWithRows": 6,
+      "algorithms": 0,
+      "labels": 33,
+      "refs": 16,
+      "chars": 25681,
+      "medianPara": 484,
+      "dirtyParagraphs": 0
+    },
+    "danglingRefs": []
+  }
+}
