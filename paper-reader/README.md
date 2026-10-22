@@ -242,6 +242,46 @@ M0 已把 `tabular` 解析成行列，讲解时自动转成 markdown 塞进 prom
 
 所以只接了元数据，不接网页正文。
 
+## 本地 PDF（parse_local.py）
+
+arXiv 上没有、或者你手上只有 PDF 的论文，走这条：
+
+```bash
+python parse_local.py "D:/papers/xxx.pdf"
+```
+
+输出和 `m0_fetch_parse.py` 完全一致，`reader.html` 直接能读。
+
+**依赖**：需要 `pymupdf`（`pip install pymupdf`）。arXiv 路径不需要。
+
+**为什么单独一个脚本**：arXiv 路径是纯标准库，PDF 路径要 PyMuPDF。
+放一起会让「只读 arXiv」也被迫装依赖。
+
+### 双栏 PDF 是怎么处理的
+
+直接按 y 坐标排序会得到「左栏第 1 行、右栏第 1 行、左栏第 2 行…」的乱序文本。
+必须先按 x 判断落在哪一栏，再各自按 y 排序，最后拼接。
+
+实测两篇：
+- MOEA/D（IEEE TEVC 2007，20 页双栏）→ 20 章，201 段
+- ETHIC（NAACL 2025，16 页双栏）→ 16 章
+
+### 一个排版坑
+
+章节标题识别不能用「字号比正文大」这一条规则：
+
+- **IEEE** 用 `I. INTRODUCTION`，字号和正文几乎一样，不加粗 → 靠编号模式识别
+- **ACL/NAACL** 的标题没有编号也不加粗（LaTeX 生成的字体名里根本没有 "Bold"）
+  → 靠章节名词表兜底（introduction / method / experiments / …）
+
+### 已知限制
+
+- **公式和表格无法还原**：PDF 里公式是绘图指令，抽出来是碎片。讲方法细节时不如 arXiv 源码
+- **扫描件不支持**：没有文本层，需要 OCR，目前直接报错退出
+- **算法伪代码会被拆成独立小节**：编号行（`1. Randomly generate…`）会被误判为标题
+
+**结论：能用 arXiv 就别用 PDF 这条路。**
+
 ## 已知限制
 
 - **表格解析成功率不均**：普通论文接近 100%，但大型技术报告（SAM 3、DINOv3）

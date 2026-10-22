@@ -198,6 +198,62 @@ section { padding: 68px 0 0; }
 .tool-desc { font-size: 13.5px; color: var(--dim); line-height: 1.65; }
 .tool-meta { font-size: 11.5px; color: var(--faint); margin-top: 8px; }
 
+/* ---------- 待读列表 ---------- */
+.reading-list { display: grid; gap: 8px; }
+
+.read-item {
+  display: grid; grid-template-columns: 22px 1fr auto;
+  gap: 12px; align-items: start;
+  background: var(--card); border: 0.5px solid var(--line);
+  border-radius: var(--r-sm); padding: 13px 16px;
+  transition: border-color .16s var(--ease), background .16s var(--ease);
+}
+.read-item:hover { border-color: rgba(31, 30, 29, .25); }
+.read-item.done { background: var(--card-soft); }
+.read-item.done .read-title { color: var(--faint); text-decoration: line-through; text-decoration-color: #b9c6bb; }
+
+.read-check {
+  width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0;
+  border: 1.5px solid #c9b3a6; border-radius: 5px;
+  cursor: pointer; background: none; padding: 0;
+  display: grid; place-items: center; transition: .16s;
+}
+.read-item.done .read-check { background: var(--sage); border-color: var(--sage); }
+.read-check svg { width: 10px; height: 10px; opacity: 0; }
+.read-item.done .read-check svg { opacity: 1; }
+
+.read-body { min-width: 0; }
+.read-title {
+  font-size: 14.5px; font-weight: 500; color: var(--ink);
+  line-height: 1.5; margin-bottom: 3px;
+}
+.read-meta {
+  font-size: 11.5px; color: var(--faint);
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.read-meta .tag {
+  padding: 1px 7px; border-radius: 99px; font-size: 10.5px;
+  background: var(--card-soft); border: 0.5px solid var(--line-soft);
+}
+.read-meta .tag.ready { background: var(--sage-wash); border-color: rgba(120,140,93,.3); color: var(--sage); }
+.read-meta .tag.pending { background: var(--ochre-wash); border-color: rgba(154,123,63,.3); color: var(--ochre); }
+
+.read-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.read-actions button, .read-actions a {
+  font-size: 12px; padding: 3px 10px; border-radius: 99px; cursor: pointer;
+  border: 0.5px solid var(--line); background: var(--card);
+  color: var(--dim); text-decoration: none; transition: .16s;
+}
+.read-actions button:hover, .read-actions a:hover {
+  border-color: var(--clay); color: var(--clay-deep); background: var(--clay-wash);
+}
+.read-actions .del:hover { border-color: var(--risk); color: var(--risk); background: var(--risk-wash); }
+
+.reading-foot {
+  margin-top: 14px; font-size: 12.5px; color: var(--faint);
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+
 /* ---------- 地形 ---------- */
 .tier {
   display: grid; grid-template-columns: 1fr; gap: 12px;
@@ -369,6 +425,18 @@ footer {
         <div class="tool-meta">需要自己的 API Key</div>
       </a>
     </div>
+  </section>
+
+  <!-- 待读列表 -->
+  <section class="wrap" id="reading">
+    <div class="sec-head">
+      <h2 style="font-size:22px;">待读列表</h2>
+      <p>解析过的能直接读；没解析的先跑一遍脚本。状态记在本机。</p>
+    </div>
+
+    <div class="reading-list" id="readingList"></div>
+
+    <div class="reading-foot" id="readingFoot"></div>
   </section>
 
   <!-- 地形 -->
@@ -725,6 +793,179 @@ document.getElementById("mathGrid").innerHTML = MATH_TIERS.map(function (tier) {
     "</details>"
   );
 }).join("");
+
+/* ============================================================
+   8. 待读列表
+   状态存 localStorage；勾掉的不删除，只置灰，方便回看
+   ============================================================ */
+
+const READING_KEY = "ai-reading-list";
+
+/** 论文标题里可能有 & < > 这类符号，直接插 HTML 会破坏结构 */
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+const READING_LIST = [
+  {
+    id: "2206.02066",
+    title: "PIDNet: A Real-time Semantic Segmentation Network",
+    note: "实时分割 · 2.6 万字 · 建议从这篇开始",
+    kind: "arxiv",
+    ready: true,
+  },
+  {
+    id: "2511.16719",
+    title: "SAM 3: Segment Anything with Concepts",
+    note: "分割大模型 · 15.4 万字 · 核心 52 段",
+    kind: "arxiv",
+    ready: true,
+  },
+  {
+    id: "2508.10104",
+    title: "DINOv3",
+    note: "视觉基础模型 · 14.3 万字 · 核心 134 段",
+    kind: "arxiv",
+    ready: true,
+  },
+  {
+    id: "2608.00927",
+    title: "AgriJetsonBench: TensorRT Benchmarking on Jetson",
+    note: "端侧基准 · 8.5 万字",
+    kind: "arxiv",
+    ready: true,
+  },
+  {
+    id: "pdf-MOEA_D",
+    title: "MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition",
+    note: "TEVC 2007 · 本地 PDF · 201 段",
+    kind: "pdf",
+    ready: true,
+  },
+  {
+    id: "pdf-ETHIC",
+    title: "ETHIC: Evaluating LLMs on Long-Context Tasks",
+    note: "NAACL 2025 · 本地 PDF · 16 章",
+    kind: "pdf",
+    ready: true,
+  },
+];
+
+function loadReadingState() {
+  try {
+    const raw = localStorage.getItem(READING_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function saveReadingState(state) {
+  try {
+    localStorage.setItem(READING_KEY, JSON.stringify(state));
+  } catch (err) { /* 存不了不影响使用 */ }
+}
+
+let readingState = loadReadingState();
+
+const CHECK_SVG =
+  '<svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.2L4.8 9 10 3.4"/></svg>';
+
+function renderReadingList() {
+  const listEl = document.getElementById("readingList");
+  if (!listEl) return;
+
+  listEl.innerHTML = READING_LIST.map(function (item) {
+    const done = !!readingState[item.id];
+    const kindTag = item.kind === "arxiv" ? "arXiv" : "本地 PDF";
+    const readyTag = item.ready ? "已解析" : "未解析";
+    const readyClass = item.ready ? "ready" : "pending";
+
+    const actions = [];
+    if (item.kind === "arxiv") {
+      actions.push('<button data-copy="' + item.id + '">复制 ID</button>');
+    } else {
+      actions.push('<button data-hint="1">怎么读</button>');
+    }
+    actions.push('<button class="del" data-del="' + item.id + '">移除</button>');
+
+    return '<div class="read-item' + (done ? " done" : "") + '" data-id="' + item.id + '">' +
+             '<button class="read-check" data-toggle="' + item.id + '" aria-label="切换状态">' +
+               CHECK_SVG +
+             "</button>" +
+             '<div class="read-body">' +
+               '<div class="read-title">' + escapeHtml(item.title) + "</div>" +
+               '<div class="read-meta">' +
+                 '<span class="tag">' + kindTag + "</span>" +
+                 '<span class="tag ' + readyClass + '">' + readyTag + "</span>" +
+                 "<span>" + escapeHtml(item.note) + "</span>" +
+               "</div>" +
+             "</div>" +
+             '<div class="read-actions">' + actions.join("") + "</div>" +
+           "</div>";
+  }).join("");
+
+  const total = READING_LIST.length;
+  const doneCount = READING_LIST.filter(function (i) { return readingState[i.id]; }).length;
+  document.getElementById("readingFoot").innerHTML =
+    "<span>共 " + total + " 篇，已读 " + doneCount + " 篇</span>" +
+    "<span>点左侧方框标记读完；状态只存在本机</span>";
+}
+
+document.getElementById("readingList").addEventListener("click", function (event) {
+  const toggle = event.target.closest("[data-toggle]");
+  if (toggle) {
+    const id = toggle.getAttribute("data-toggle");
+    readingState[id] = !readingState[id];
+    saveReadingState(readingState);
+    renderReadingList();
+    return;
+  }
+
+  const copyBtn = event.target.closest("[data-copy]");
+  if (copyBtn) {
+    const value = copyBtn.getAttribute("data-copy");
+    const done = function () {
+      copyBtn.textContent = "已复制";
+      setTimeout(function () { copyBtn.textContent = "复制 ID"; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(done).catch(function () {
+        copyBtn.textContent = value;
+      });
+    } else {
+      copyBtn.textContent = value;
+    }
+    return;
+  }
+
+  const hintBtn = event.target.closest("[data-hint]");
+  if (hintBtn) {
+    alert(
+      "本地 PDF 这样读：\n\n" +
+      "1. 进 paper-reader 目录\n" +
+      "2. python parse_local.py \"论文路径.pdf\"\n" +
+      "3. 打开 reader.html，选 out/<文件名>/paper.json"
+    );
+    return;
+  }
+
+  const delBtn = event.target.closest("[data-del]");
+  if (delBtn) {
+    const id = delBtn.getAttribute("data-del");
+    const item = READING_LIST.find(function (i) { return i.id === id; });
+    if (item && confirm("从列表移除《" + item.title.slice(0, 40) + "》？\n只影响这个列表，文件不会被删。")) {
+      READING_LIST.splice(READING_LIST.indexOf(item), 1);
+      renderReadingList();
+    }
+  }
+});
+
+renderReadingList();
 </script>
 
 <script>
