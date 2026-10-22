@@ -11,6 +11,7 @@
 - 剔除标题区（`\maketitle` / `\title` / `\author` / abstract）
 - **表格结构化**：`tabular` 按行列切成 `header` + `rows`
 - **算法环境分离**：伪代码单独存放，不混进正文
+- **阅读计划**：按一级章节聚合，标出必读 / 略读 / 按需 / 附录，估算调用量
 - 按章节切分，段落切成论证单元（先用段落近似）
 - 抽取公式（保留 LaTeX 原文与 label）、图表（路径 + caption + label）
 - 五项质量自检，判定能否进入 M1
@@ -44,9 +45,36 @@ out/<arxiv-id>/
 `paper.json` 关键字段：
 
 - `meta`：标题、作者、摘要、arXiv 版本
-- `outline`：章节树（含没有直接正文的纯标题章节）
-- `segments[]`：论证单元，含 `text` / `section` / `formulas` / `figures`
-- `parseQuality`：四项检查、统计、悬空引用明细
+- `outline`：章节树（含没有直接正文的纯标题章节、`appendix` 标记）
+- `segments[]`：论证单元，含 `text` / `section` / `formulas` / `figures` / `tables`
+- `readingPlan`：按一级章节聚合的阅读计划
+- `parseQuality`：五项检查、统计、悬空引用明细
+
+## 阅读计划
+
+长论文逐段讲不现实。SAM 3 有 268 段，按每段一次调用算，光讲解就要 268 次——
+用户读到第 50 段就会放弃。所以在打开论文前先告诉他结构：
+
+```
+角色     章节                        段数    字数
+必读     Introduction                 6    4587
+必读     Model                       16    7892
+核心     Experiments                 13    8203
+可略读    Related Work                 4    4119
+附录     Model Details               48   25649
+```
+
+核心 52 段 · 略读 4 段 · 按需 211 段 · 可跳 1 段
+只讲核心约需 52 次调用，全讲约需 268 次
+
+**两个判定细节**：
+
+1. **必须识别 `\appendix`**。LaTeX 里附录的 `\section` 仍编号成 A/B/C，级别不变，
+   不跟踪的话「Model Details」48 段会被当成正文核心章节。
+2. **正文一级章节默认核心**。算法、数据构建这些章节标题往往不含 method/model
+   这类词，纯关键词匹配会漏掉真核心（SAM 3 的「Data Engine」就是这样被判成按需的）。
+
+角色只是启发式，不调模型。它的用途是让用户圈定范围，而不是替用户决定。
 
 ## 质量自检
 

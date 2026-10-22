@@ -542,12 +542,20 @@ SECTION_PATTERN = re.compile(
 
 def split_sections(body: str) -> list[dict]:
     """
-    按 \\section 系列切分。返回 [{level, title, content}]，
+    按 \\section 系列切分。返回 [{level, title, content, appendix}]，
     content 是该标题到下一个标题之间的原文。
+
+    \\appendix 之后 \\section 会编号成 A/B/C，仍然是 section 级别，
+    但语义上是附录——必须单独标记，否则附录会被当成正文核心章节。
     """
     matches = list(SECTION_PATTERN.finditer(body))
     if not matches:
         return []
+
+    appendix_pos = body.find("\\appendix")
+
+    def in_appendix(position: int) -> bool:
+        return appendix_pos != -1 and position > appendix_pos
 
     sections = []
     # 第一个标题之前的内容（通常是摘要和方法预览）单独成节
@@ -557,6 +565,7 @@ def split_sections(body: str) -> list[dict]:
             "level": "section",
             "title": "（正文前）",
             "content": preamble,
+            "appendix": False,
         })
 
     for index, match in enumerate(matches):
@@ -565,6 +574,7 @@ def split_sections(body: str) -> list[dict]:
             "level": match.group("level"),
             "title": clean_inline(match.group("title")),
             "content": body[match.end() : end],
+            "appendix": in_appendix(match.start()),
         })
     return sections
 
@@ -815,6 +825,123 @@ def build_segments(sections: list[dict]) -> list[dict]:
 
 # ---------------------------------------------------------------- 质量自检
 
+# ---------------------------------------------------------------- 阅读计划
+
+# 按章节标题判断它在阅读中的角色。纯启发式，不调模型——
+# 目的是在打开论文前就告诉用户「这篇 268 段，核心只有 120 段」。
+SECTION_ROLE_RULES = [
+    (r"abstract",                 "必读",   "core"),
+    (r"introduction",             "必读",   "core"),
+    (r"related work|prior work|background", "可略读", "skim"),
+    (r"method|approach|model|architecture|framework|formulation",
+                                  "必读",   "core"),
+    (r"experiment|evaluation|result|benchmark",
+                                  "核心",   "core"),
+    (r"ablation|analysis|discussion|study",
+                                  "按需",   "optional"),
+    (r"conclusion|limitation|future", "必读", "core"),
+    (r"appendix|supplement|additional", "按需", "optional"),
+    (r"acknowledg|reference|bibliograph", "跳过", "skip"),
+]
+
+
+def classify_section(title: str) -> tuple[str, str]:
+    lowered = title.lower()
+    for pattern, role, priority in SECTION_ROLE_RULES:
+        if re.search(pattern, lowered):
+            return role, priority
+    # 默认核心：正文一级章节基本都是重要的（算法、数据构建等标题
+    # 往往不含 method/model 这类词，按关键词判会漏掉真核心）
+    return "必读", "core"
+
+
+def build_reading_plan(outline: list[dict], segments: list[dict]) -> dict:
+    """
+    按一级章节聚合，给出阅读角色与调用量预估。
+
+    长论文（SAM 3 有 268 段）逐段讲不现实，必须先让用户看见结构、
+    自己圈定范围。这个计划是 M1 的输入。
+    """
+    groups = []
+    current = None
+
+    for item in outline:
+        if item["level"] == "section":
+            current = {
+                "title": item["title"],
+                "segments": item["segments"],
+                "children": [],
+                "appendix": item.get("appendix", False),
+            }
+            groups.append(current)
+        elif current is not None:
+            # 子章节并入父章节
+            current["children"].append(item["title"])
+            current["segments"] += item["segments"]
+        else:
+            # 第一个 \section 之前的内容
+            current = {
+                "title": item["title"],
+                "segments": item["segments"],
+                "children": [],
+                "appendix": item.get("appendix", False),
+            }
+            groups.append(current)
+
+    # 补字数与角色
+    chars_by_section = {}
+    for segment in segments:
+        key = segment["section"]
+        chars_by_section[key] = chars_by_section.get(key, 0) + len(segment["text"])
+
+    for group in groups:
+        titles = [group["title"]] + group["children"]
+        group["chars"] = sum(chars_by_section.get(t, 0) for t in titles)
+        if group.get("appendix"):
+            # 附录统一按需，不参与核心统计
+            group["role"], group["priority"] = "附录", "optional"
+        else:
+            group["role"], group["priority"] = classify_section(group["title"])
+
+    counts = {"core": 0, "skim": 0, "optional": 0, "skip": 0}
+    for group in groups:
+        counts[group["priority"]] += group["segments"]
+
+    # 每段一次讲解调用，核心段数就是最小调用量
+    return {
+        "totalSegments": len(segments),
+        "totalChars": sum(chars_by_section.values()),
+        "sections": groups,
+        "summary": {
+            "coreSegments": counts["core"],
+            "skimSegments": counts["skim"],
+            "optionalSegments": counts["optional"],
+            "skipSegments": counts["skip"],
+            "minCallsIfCoreOnly": counts["core"],
+            "minCallsIfAll": len(segments),
+        },
+    }
+
+
+def print_reading_plan(plan: dict) -> None:
+    print()
+    print("  阅读计划")
+    print("  %-6s %-38s %6s %8s" % ("角色", "章节", "段数", "字数"))
+
+    for group in plan["sections"]:
+        title = group["title"][:36]
+        print("  %-6s %-38s %6d %8d"
+              % (group["role"], title, group["segments"], group["chars"]))
+
+    summary = plan["summary"]
+    print()
+    print("  核心 %d 段 · 略读 %d 段 · 按需 %d 段 · 可跳 %d 段"
+          % (summary["coreSegments"], summary["skimSegments"],
+             summary["optionalSegments"], summary["skipSegments"]))
+    print("  只讲核心约需 %d 次调用，全讲约需 %d 次"
+          % (summary["minCallsIfCoreOnly"], summary["minCallsIfAll"]))
+
+
 def is_table_residue(text: str) -> bool:
     """
     判断一段是不是表格残渣。
@@ -950,6 +1077,10 @@ def print_report(paper: dict, quality: dict) -> None:
              stats.get("algorithms", 0), stats["chars"]))
     if quality["danglingRefs"]:
         print("  悬空   %s" % ", ".join(quality["danglingRefs"]))
+
+    if paper.get("readingPlan"):
+        print_reading_plan(paper["readingPlan"])
+
     print()
     verdict = "可以进入 M1（模型标注与讲解）" if quality["passed"] \
               else "不达标，需要走降级路径（HTML 或视觉兜底）"
@@ -1040,6 +1171,7 @@ def main() -> int:
                 "level": section["level"],
                 "title": section["title"],
                 "segments": sum(1 for s in segments if s["section"] == section["title"]),
+                "appendix": section.get("appendix", False),
             }
             for section in sections
         ]
@@ -1057,6 +1189,9 @@ def main() -> int:
             "segments": segments,
         }
         quality = run_quality_check(paper, all_labels, all_refs)
+
+        # 阅读计划：按一级章节聚合，供用户圈定范围
+        paper["readingPlan"] = build_reading_plan(outline, segments)
         paper["parseQuality"] = {
             "passed": quality["passed"],
             "checks": quality["checks"],
