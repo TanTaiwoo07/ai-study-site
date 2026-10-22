@@ -9,3 +9,9 @@ Desktop.ini
 
 # 工具内部数据（工作日志等，不上传）
 .workbuddy/
+
+# 论文精读助手：缓存与输出不入库
+paper-reader/cache/
+paper-reader/out/
+__pycache__/
+*.pyc
