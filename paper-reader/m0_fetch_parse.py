@@ -23,6 +23,7 @@ import io
 import json
 import re
 import shutil
+import statistics
 import sys
 import tarfile
 import tempfile
@@ -39,11 +40,18 @@ ABS_URL = "https://arxiv.org/abs/{arxiv_id}"
 
 TIMEOUT = 60
 
-# 质量自检阈值（SPEC §3.6，按 M0 实测校准）
+# 质量自检阈值（SPEC §3.6，按 M0 实测两轮校准）
 MIN_SECTIONS = 4
 MIN_PARA_LEN = 30
-MAX_PARA_LEN = 800
 MAX_DANGLING_REFS = 2
+
+# 段落指标用「中位数 + 超长占比」，不用平均值：
+# 技术报告（如 DINOv3，16 万字）段落天然偏长，平均值会误判；
+# 真正要抓的是「切太碎（乱序）」和「切不动（整段没切开）」两种失败。
+MEDIAN_PARA_MIN = 50
+MEDIAN_PARA_MAX = 1500
+OVERSIZED_PARA = 4000
+MAX_OVERSIZED_RATIO = 0.10
 
 # 公式密度不再是硬指标：实验型论文（如 ResNet）本身公式极少，
 # 用它判定等于惩罚论文类型而不是解析质量。改为只统计、不判定。
@@ -324,11 +332,17 @@ def extract_braced(text: str, start: int) -> str:
     """
     从 start（指向 { 之后）开始，按花括号配对截取内容。
     用于 \\title{...} 这种可能含嵌套花括号的命令。
+
+    必须跳过转义的 \\{ 与 \\}——LaTeX 里 \\{W_i\\} 表示字面花括号，
+    如果照常计数，配对会错位，一路吞到文件末尾（大工程里尤其致命）。
     """
     depth = 1
     index = start
     while index < len(text) and depth > 0:
         char = text[index]
+        if char == "\\":
+            index += 2      # 跳过转义序列，不参与计数
+            continue
         if char == "{":
             depth += 1
         elif char == "}":
@@ -380,12 +394,8 @@ NEWCOMMAND_PATTERN = re.compile(
 )
 
 
-def expand_newcommands(text: str) -> str:
-    """
-    展开作者自定义宏（\\newcommand{\\ve}[1]{\\mathbf{#1}}）。
-    不展开的话，公式里会留下 \\ve{y} 这种模型不认识的记号。
-    只支持 0–2 个参数，够覆盖论文里的绝大多数情况。
-    """
+def _expand_newcommands(text: str, remove_definitions: bool) -> str:
+    """展开实现。remove_definitions=False 时只替换使用处、保留定义原文。"""
     mapping = {}
     spans = []
 
@@ -397,9 +407,12 @@ def expand_newcommands(text: str) -> str:
         if argc <= 2:
             mapping[name] = (argc, body)
 
-    # 先删掉定义本身，避免残留
-    for start, end in sorted(spans, reverse=True):
-        text = text[:start] + " " + text[end:]
+    # 删除定义本身，避免残留。倒序删除保证前面的坐标仍然有效；
+    # 再校验末尾确实是 }，防止定位失准把正文一起吃掉。
+    if remove_definitions:
+        for start, end in sorted(spans, reverse=True):
+            if 0 <= start < end <= len(text) and text[end - 1] == "}":
+                text = text[:start] + " " + text[end:]
 
     # 两轮展开，处理宏里套宏的情况
     for _ in range(2):
@@ -422,6 +435,23 @@ def expand_newcommands(text: str) -> str:
     return text
 
 
+def expand_newcommands(text: str) -> str:
+    """
+    展开作者自定义宏（\\newcommand{\\ve}[1]{\\mathbf{#1}}）。
+    不展开的话，公式里会留下 \\ve{y} 这种模型不认识的记号。
+
+    安全兜底：复杂工程（如 SAM 3，75 个宏）里多次删除定义可能让坐标漂移，
+    把 \\begin{document} 一起吃掉。一旦检测到结构被破坏，就退回「只展开不删定义」。
+    """
+    expanded = _expand_newcommands(text, remove_definitions=True)
+
+    marker = "\\begin{document}"
+    if marker in text and marker not in expanded:
+        expanded = _expand_newcommands(text, remove_definitions=False)
+
+    return expanded
+
+
 def extract_metadata(body: str) -> dict:
     """抽标题、作者、摘要"""
     meta = {"title": "", "authors": [], "abstract": "", "rawAuthor": ""}
@@ -430,9 +460,12 @@ def extract_metadata(body: str) -> dict:
     if match:
         meta["title"] = clean_inline(extract_braced(body, match.end()))
 
-    match = re.search(r"\\author\s*\{", body)
-    if match:
-        raw = extract_braced(body, match.end())
+    # \author 可能带可选参数（\author[*]{...}），也可能一人一条命令
+    author_cmds = list(re.finditer(r"\\author(?:\s*\[[^\]]*\])?\s*\{", body))
+    if author_cmds:
+        raw = " \\and ".join(
+            extract_braced(body, cmd.end()) for cmd in author_cmds
+        )
         meta["rawAuthor"] = re.sub(r"\s+", " ", raw).strip()[:600]
 
         # 必须在清理之前按 \and / \\ 切开，否则分隔符会被当成命令删掉。
@@ -637,14 +670,15 @@ def build_segments(sections: list[dict]) -> list[dict]:
 
 def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
     """
-    三项硬指标 + 若干参考值。
+    四项指标：章节数、段落中位数、超长段落占比、悬空引用。
     公式数只统计不判定——实验型论文天然公式少，用它当门槛没有意义。
     """
     segments = paper["segments"]
     sections = {s["section"] for s in segments}
 
-    lengths = [len(s["text"]) for s in segments] or [0]
-    avg_len = sum(lengths) / len(lengths)
+    lengths = sorted(len(s["text"]) for s in segments) or [0]
+    median_len = statistics.median(lengths)
+    oversized_ratio = sum(1 for x in lengths if x > OVERSIZED_PARA) / max(len(lengths), 1)
 
     formula_count = sum(len(s.get("formulas", [])) for s in segments)
     figure_count = sum(len(s.get("figures", [])) for s in segments)
@@ -660,10 +694,17 @@ def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
             "pass": len(sections) >= MIN_SECTIONS,
         },
         {
-            "name": "平均段长",
-            "value": round(avg_len, 1),
-            "threshold": "%d ~ %d 字符" % (MIN_PARA_LEN, MAX_PARA_LEN),
-            "pass": MIN_PARA_LEN <= avg_len <= MAX_PARA_LEN,
+            "name": "段落中位数",
+            "value": round(median_len, 1),
+            "threshold": "%d ~ %d 字符" % (MEDIAN_PARA_MIN, MEDIAN_PARA_MAX),
+            "pass": MEDIAN_PARA_MIN <= median_len <= MEDIAN_PARA_MAX,
+        },
+        {
+            "name": "超长段落",
+            "value": "%.1f%%" % (oversized_ratio * 100),
+            "threshold": "> %d 字符的段落 <= %.0f%%"
+                         % (OVERSIZED_PARA, MAX_OVERSIZED_RATIO * 100),
+            "pass": oversized_ratio <= MAX_OVERSIZED_RATIO,
         },
         {
             "name": "悬空引用",
@@ -686,6 +727,7 @@ def run_quality_check(paper: dict, all_labels: set, all_refs: set) -> dict:
             "labels": len(all_labels),
             "refs": len(all_refs),
             "chars": sum(lengths),
+            "medianPara": round(median_len, 1),
         },
         "danglingRefs": sorted(dangling)[:10],
     }
