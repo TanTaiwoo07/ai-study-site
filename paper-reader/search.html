@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>论文搜索 · AI 学习站</title>
+<style>
+:root {
+  --bg: #faf9f5;
+  --bg-deep: #f0eee6;
+  --card: #ffffff;
+  --card-soft: #f5f4ed;
+  --line: rgba(31, 30, 29, .15);
+  --line-soft: rgba(31, 30, 29, .08);
+  --ink: #141413;
+  --ink-2: #3d3d3a;
+  --dim: #5e5d59;
+  --faint: #73726c;
+  --clay: #d97757;
+  --clay-deep: #c6613f;
+  --clay-wash: #fbeee7;
+  --sage: #788c5d;
+  --sage-wash: #e9f1dc;
+  --ochre: #9a7b3f;
+  --ochre-wash: #f6eedf;
+  --risk: #bf4d43;
+  --risk-wash: #f7ecec;
+  --serif: "Source Serif 4", "Lora", Georgia, "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --r: 12px;
+  --r-sm: 8px;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.7;
+}
+::selection { background: var(--clay); color: #fff; }
+:focus-visible { outline: 2px solid var(--clay-deep); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; line-height: 1.35; }
+a { color: inherit; }
+button, input, select { font-family: inherit; font-size: inherit; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 0 20px; height: 58px;
+  background: rgba(250,249,245,.92); border-bottom: 0.5px solid var(--line);
+  backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10;
+}
+.topbar h1 { font-size: 16px; }
+.topbar h1 span { color: var(--clay); }
+.btn {
+  font-size: 13.5px; font-weight: 480; padding: 7px 14px;
+  border-radius: var(--r-sm); cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  transition: background .16s var(--ease), border-color .16s var(--ease);
+}
+.btn:hover { background: var(--card-soft); }
+.btn-primary { background: var(--clay); border-color: var(--clay); color: #fff; }
+.btn-primary:hover { background: var(--clay-deep); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+.hero { padding: 42px 0 26px; }
+.hero h2 { font-size: clamp(24px, 4vw, 32px); margin-bottom: 8px; }
+.hero p { color: var(--dim); font-size: 14.5px; margin: 0; }
+
+.searchbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.searchbar input {
+  flex: 1; padding: 11px 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  outline: none; font-size: 15px;
+}
+.searchbar input:focus { border-color: var(--clay); box-shadow: 0 0 0 3px rgba(217,119,87,.1); }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.filters select {
+  padding: 7px 11px; border-radius: var(--r-sm); border: 1px solid var(--line);
+  background: var(--card); color: var(--ink-2); font-size: 13px; cursor: pointer; outline: none;
+}
+
+.quick { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 22px; }
+.quick button {
+  font-size: 12.5px; padding: 4px 11px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--dim);
+  transition: .16s;
+}
+.quick button:hover { border-color: var(--clay); color: var(--clay-deep); background: var(--clay-wash); }
+
+.meta-line { font-size: 12.5px; color: var(--faint); margin-bottom: 14px; }
+
+.result {
+  background: var(--card); border: 0.5px solid var(--line);
+  border-radius: var(--r); padding: 16px 18px; margin-bottom: 10px;
+  transition: border-color .16s;
+}
+.result:hover { border-color: rgba(31,30,29,.25); }
+.result h3 { font-size: 15.5px; margin-bottom: 6px; }
+.result .sub {
+  font-size: 12.5px; color: var(--faint); display: flex; gap: 12px;
+  flex-wrap: wrap; align-items: center;
+}
+.result .sub .cites { color: var(--clay-deep); font-weight: 600; }
+.result .links { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.result .links a, .result .links button {
+  font-size: 12px; padding: 3px 10px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card-soft); color: var(--dim);
+  text-decoration: none; transition: .16s;
+}
+.result .links a:hover, .result .links button:hover {
+  border-color: var(--clay); color: var(--clay-deep); background: var(--clay-wash);
+}
+.result .links a.copied, .result .links button.copied {
+  background: var(--sage-wash); border-color: rgba(120,140,93,.4); color: var(--sage);
+}
+
+.state { padding: 40px 0; text-align: center; color: var(--faint); font-size: 14px; }
+.state.error { color: var(--risk); }
+
+footer {
+  padding: 26px 0 46px; margin-top: 30px;
+  border-top: 0.5px solid var(--line);
+  font-size: 12.5px; color: var(--faint); line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>论文<span>搜索</span></h1>
+  <a class="btn" href="../index.html">← 回学习站</a>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h2>找一篇该读的论文</h2>
+    <p>数据来自 OpenAlex（开放学术图谱）。大方向用领域词，小方向加限定词。</p>
+  </div>
+
+  <div class="searchbar">
+    <input id="q" placeholder="例如：real-time semantic segmentation" />
+    <button class="btn btn-primary" id="btnSearch">搜索</button>
+  </div>
+
+  <div class="filters">
+    <select id="year">
+      <option value="">不限时间</option>
+      <option value="1">近 1 年</option>
+      <option value="3" selected>近 3 年</option>
+      <option value="5">近 5 年</option>
+    </select>
+    <select id="sort">
+      <option value="cited_by_count:desc" selected>按引用数</option>
+      <option value="publication_year:desc">按时间（新→旧）</option>
+    </select>
+    <select id="perPage">
+      <option value="20" selected>20 条</option>
+      <option value="50">50 条</option>
+    </select>
+  </div>
+
+  <div class="quick" id="quick"></div>
+
+  <div class="meta-line" id="metaLine"></div>
+  <div id="results"></div>
+
+  <footer>
+    数据源 <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>，开放获取，无需 API Key。<br />
+    引用数是全库统计，不等于论文质量；刚发表的好工作引用数天然低。
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   快捷方向：给不知道该怎么组织关键词的时候一个起点
+   ============================================================ */
+
+const QUICK_QUERIES = [
+  { label: "语义分割", q: "semantic segmentation" },
+  { label: "目标检测", q: "object detection" },
+  { label: "图像分类", q: "image classification" },
+  { label: "实时推理", q: "real-time inference efficient" },
+  { label: "模型压缩", q: "model compression quantization" },
+  { label: "端侧部署", q: "edge device deployment neural network" },
+  { label: "视觉 Transformer", q: "vision transformer" },
+  { label: "扩散模型", q: "diffusion model image generation" },
+  { label: "自监督", q: "self-supervised learning representation" },
+];
+
+const API = "https://api.openalex.org/works";
+
+/* ============================================================
+   状态
+   ============================================================ */
+
+const state = {
+  busy: false,
+  lastQuery: "",
+};
+
+/* ============================================================
+   查询
+   ============================================================ */
+
+function buildUrl(keyword, years, sort, perPage) {
+  const filters = [];
+
+  if (keyword) {
+    // 标题+摘要内检索，比全文检索相关度高得多
+    filters.push("title_and_abstract.search:" + keyword.replace(/,/g, " "));
+  }
+  if (years) {
+    const from = new Date();
+    from.setFullYear(from.getFullYear() - Number(years));
+    filters.push("from_publication_date:" + from.toISOString().slice(0, 10));
+  }
+
+  const params = new URLSearchParams();
+  if (filters.length) params.set("filter", filters.join(","));
+  params.set("sort", sort);
+  params.set("per_page", perPage);
+  params.set("select", "title,publication_year,cited_by_count,doi,ids,type");
+  params.set("mailto", "paper-reader@example.com");   // OpenAlex 建议带上，进礼貌池
+
+  return API + "?" + params.toString();
+}
+
+/**
+ * 带退避的请求。OpenAlex 对短时间内的连续请求会返回 429，
+ * 正常使用不会触发，但连点几次搜索就会——必须能自己缓过来。
+ */
+async function requestWithRetry(url, retries) {
+  const max = typeof retries === "number" ? retries : 2;
+
+  for (let attempt = 0; attempt <= max; attempt++) {
+    const response = await fetch(url);
+
+    if (response.status === 429) {
+      if (attempt < max) {
+        await new Promise(function (resolve) {
+          setTimeout(resolve, 1200 * (attempt + 1));
+        });
+        continue;
+      }
+      throw new Error("接口限流了（429），等十几秒再搜一次");
+    }
+
+    return response;
+  }
+}
+
+async function search() {
+  if (state.busy) return;
+
+  const keyword = document.getElementById("q").value.trim();
+  if (!keyword) {
+    document.getElementById("results").innerHTML =
+      '<div class="state">先输入关键词。想不出关键词就点上面的方向标签。</div>';
+    return;
+  }
+
+  const years = document.getElementById("year").value;
+  const sort = document.getElementById("sort").value;
+  const perPage = document.getElementById("perPage").value;
+
+  state.busy = true;
+  state.lastQuery = keyword;
+  setBusy(true);
+
+  const resultsEl = document.getElementById("results");
+  const metaEl = document.getElementById("metaLine");
+  resultsEl.innerHTML = '<div class="state">正在检索…</div>';
+  metaEl.textContent = "";
+
+  try {
+    const response = await requestWithRetry(buildUrl(keyword, years, sort, perPage));
+    if (!response.ok) throw new Error("接口返回 " + response.status);
+
+    const data = await response.json();
+    const items = data.results || [];
+    const total = (data.meta && data.meta.count) || 0;
+
+    if (!items.length) {
+      resultsEl.innerHTML = '<div class="state">没有找到匹配的论文，换个更短的词试试。</div>';
+      metaEl.textContent = "";
+      return;
+    }
+
+    metaEl.textContent = "命中 " + total.toLocaleString() + " 篇，显示前 " + items.length + " 篇";
+    resultsEl.innerHTML = items.map(renderResult).join("");
+    bindResultActions(items);
+  } catch (err) {
+    resultsEl.innerHTML = '<div class="state error">检索失败：' + escapeHtml(err.message) +
+      "。可能是网络问题，稍后再试。</div>";
+  } finally {
+    state.busy = false;
+    setBusy(false);
+  }
+}
+
+function renderResult(work) {
+  const title = work.title || "（无标题）";
+  const year = work.publication_year || "";
+  const cites = work.cited_by_count;
+  const doi = work.doi || "";
+  const ids = work.ids || {};
+  const arxivUrl = ids.arxiv || "";
+  const arxivId = extractArxivId(arxivUrl);
+
+  const links = [];
+
+  if (arxivId) {
+    // 直接给出 arXiv ID，方便复制到解析脚本
+    links.push('<button data-copy="' + escapeAttr(arxivId) + '">复制 arXiv ID</button>');
+    links.push('<a href="https://arxiv.org/abs/' + escapeAttr(arxivId) + '" target="_blank" rel="noopener">arXiv 页面</a>');
+  } else {
+    // 没有 arXiv ID 时，提供一个标题检索的跳转
+    links.push('<a href="https://arxiv.org/search/?query=' +
+      encodeURIComponent(title) + '&searchtype=all" target="_blank" rel="noopener">去 arXiv 找这篇</a>');
+  }
+  if (doi) {
+    links.push('<a href="' + escapeAttr(doi) + '" target="_blank" rel="noopener">DOI</a>');
+  }
+
+  return '<div class="result">' +
+           "<h3>" + escapeHtml(title) + "</h3>" +
+           '<div class="sub">' +
+             (year ? "<span>" + year + "</span>" : "") +
+             (typeof cites === "number"
+               ? '<span class="cites">被引 ' + cites.toLocaleString() + "</span>"
+               : "") +
+             (work.type ? "<span>" + escapeHtml(work.type) + "</span>" : "") +
+           "</div>" +
+           '<div class="links">' + links.join("") + "</div>" +
+         "</div>";
+}
+
+function bindResultActions() {
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.onclick = function () {
+      const value = btn.getAttribute("data-copy");
+      copyText(value).then(function (ok) {
+        const original = btn.textContent;
+        btn.textContent = ok ? "已复制 " + value : "复制失败";
+        btn.classList.add("copied");
+        setTimeout(function () {
+          btn.textContent = original;
+          btn.classList.remove("copied");
+        }, 1400);
+      });
+    };
+  });
+}
+
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(function () { return true; })
+      .catch(function () { return false; });
+  }
+  // file:// 下的兜底
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(area);
+    return Promise.resolve(ok);
+  } catch (err) {
+    return Promise.resolve(false);
+  }
+}
+
+/* ============================================================
+   工具
+   ============================================================ */
+
+function extractArxivId(url) {
+  if (!url) return "";
+  const match = String(url).match(/arxiv\.org\/(?:abs|pdf)\/([0-9]{4}\.[0-9]{4,5}|[a-z-]+\/[0-9]{7})/i);
+  return match ? match[1] : "";
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeAttr(text) {
+  return escapeHtml(text).replace(/"/g, "&quot;");
+}
+
+function setBusy(busy) {
+  document.getElementById("btnSearch").disabled = busy;
+  document.getElementById("btnSearch").textContent = busy ? "检索中…" : "搜索";
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+
+document.getElementById("quick").innerHTML = QUICK_QUERIES.map(function (item, index) {
+  return '<button data-qi="' + index + '">' + escapeHtml(item.label) + "</button>";
+}).join("");
+
+document.getElementById("quick").addEventListener("click", function (event) {
+  const btn = event.target.closest("[data-qi]");
+  if (!btn) return;
+  const item = QUICK_QUERIES[Number(btn.getAttribute("data-qi"))];
+  document.getElementById("q").value = item.q;
+  search();
+});
+
+document.getElementById("btnSearch").onclick = search;
+
+document.getElementById("q").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") search();
+});
+
+["year", "sort", "perPage"].forEach(function (id) {
+  document.getElementById(id).addEventListener("change", function () {
+    if (state.lastQuery) search();
+  });
+});
+</script>
+</body>
+</html>

@@ -174,6 +174,30 @@ section { padding: 68px 0 0; }
 }
 .pass-line b { font-weight: 650; }
 
+/* ---------- 论文工具入口 ---------- */
+.tool-grid {
+  display: grid; grid-template-columns: 1fr; gap: 12px;
+}
+@media (min-width: 700px) { .tool-grid { grid-template-columns: 1fr 1fr; } }
+
+.tool-card {
+  display: block; background: var(--card);
+  border: 0.5px solid var(--line); border-radius: var(--r);
+  padding: 20px 22px; transition: border-color .18s var(--ease), background .18s var(--ease);
+}
+.tool-card:hover { border-color: rgba(217, 119, 87, .45); background: #fdfcfa; }
+.tool-name {
+  font-family: var(--serif); font-size: 18px; font-weight: 600;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+}
+.tool-name::after {
+  content: "→"; font-family: var(--sans); font-size: 14px;
+  color: var(--clay); opacity: 0; transition: opacity .18s, transform .18s;
+}
+.tool-card:hover .tool-name::after { opacity: 1; transform: translateX(3px); }
+.tool-desc { font-size: 13.5px; color: var(--dim); line-height: 1.65; }
+.tool-meta { font-size: 11.5px; color: var(--faint); margin-top: 8px; }
+
 /* ---------- 地形 ---------- */
 .tier {
   display: grid; grid-template-columns: 1fr; gap: 12px;
@@ -322,6 +346,28 @@ footer {
       <div class="todo-list" id="todoList"></div>
 
       <div class="pass-line" id="passLine"></div>
+    </div>
+  </section>
+
+  <!-- 论文工具 -->
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">工具</p>
+      <h2>读论文</h2>
+      <p>找论文和读论文是两个动作，分成两个入口。都要自己配 API，Key 只存在本机。</p>
+    </div>
+
+    <div class="tool-grid">
+      <a class="tool-card" href="paper-reader/search.html">
+        <div class="tool-name">论文搜索</div>
+        <div class="tool-desc">按方向、时间、引用数筛，找到该读的那几篇</div>
+        <div class="tool-meta">OpenAlex · 无需 Key</div>
+      </a>
+      <a class="tool-card" href="paper-reader/reader.html">
+        <div class="tool-name">论文精读</div>
+        <div class="tool-desc">逐段讲解、检验理解、按诊断调整深度</div>
+        <div class="tool-meta">需要自己的 API Key</div>
+      </a>
     </div>
   </section>
 

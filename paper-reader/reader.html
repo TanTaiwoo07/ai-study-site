@@ -229,6 +229,39 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 @keyframes blink { 50% { opacity: 0; } }
 
+/* ---------- 表格预览 ---------- */
+.table-preview {
+  margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-sm);
+  overflow: hidden; background: var(--card);
+}
+.table-preview .cap {
+  font-size: 12px; color: var(--faint); padding: 8px 12px;
+  background: var(--card-soft); border-bottom: 0.5px solid var(--line-soft);
+  line-height: 1.5;
+}
+.table-scroll { overflow-x: auto; }
+.table-preview table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.table-preview th, .table-preview td {
+  padding: 6px 10px; text-align: left; white-space: nowrap;
+  border-bottom: 0.5px solid var(--line-soft); color: var(--ink-2);
+}
+.table-preview th { background: var(--card-soft); font-weight: 600; color: var(--ink); }
+.table-preview tr:last-child td { border-bottom: none; }
+.table-more { font-size: 11.5px; color: var(--faint); padding: 6px 12px; }
+
+/* ---------- 引用列表 ---------- */
+.cite-list { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+.cite-title {
+  font-size: 11.5px; color: var(--faint); padding: 8px 12px;
+  background: var(--card-soft); border-bottom: 0.5px solid var(--line-soft);
+}
+.cite-item {
+  padding: 9px 12px; border-bottom: 0.5px solid var(--line-soft);
+}
+.cite-item:last-child { border-bottom: none; }
+.cite-name { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.cite-meta { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+
 /* ---------- 检验与诊断 ---------- */
 .quiz-box {
   margin-top: 18px; padding: 18px 20px;
@@ -396,6 +429,8 @@ const state = {
   diagnostics: {},       // segmentId -> 诊断结果，避免重复评估
   streak: { fail: 0, pass: 0 },  // 连续未掌握 / 掌握次数
   depthOverride: null,   // 诊断后实际使用的档位（可被用户撤销）
+  extra: null,           // Semantic Scholar 元数据
+  landmark: false,       // 是否高被引（>=500）
 };
 
 /* ============================================================
@@ -540,6 +575,10 @@ function buildSystemPrompt() {
     "**这段在做什么**：这段在论证什么，属于论文的哪个环节。",
     "**白话**：用日常语言解释，必要时打比方。",
     "**位置**：它和上一段、下一段的关系。",
+    "",
+    "【关于表格】",
+    "如果给了表格数据，优先用表里的具体数字支撑解释（例如「比 baseline 高 2.1 个点」），",
+    "不要泛泛说「效果更好」。表里没有的数字，一个都不要编。",
   ].join("\n");
 }
 
@@ -573,10 +612,43 @@ function buildPrevSummary() {
   return items.join("\n");
 }
 
+/** 把解析出的表格转成 markdown，喂给模型比喂原始 LaTeX 靠谱得多 */
+function tablesToMarkdown(tables) {
+  return tables.map(function (table, index) {
+    const header = table.header || [];
+    const rows = table.rows || [];
+    if (!header.length && !rows.length) return "";
+
+    const width = Math.max(header.length, rows.length ? rows[0].length : 0);
+    const pad = function (row) {
+      const cells = row.slice(0, width);
+      while (cells.length < width) cells.push("");
+      return cells.map(function (c) { return String(c).replace(/\|/g, "/"); });
+    };
+
+    const lines = [];
+    if (header.length) {
+      lines.push("| " + pad(header).join(" | ") + " |");
+      lines.push("|" + new Array(width).fill("---").join("|") + "|");
+    }
+    // 最多 20 行，避免把 prompt 撑爆
+    rows.slice(0, 20).forEach(function (row) {
+      lines.push("| " + pad(row).join(" | ") + " |");
+    });
+    if (rows.length > 20) {
+      lines.push("（表格共 " + rows.length + " 行，此处只列前 20 行）");
+    }
+
+    const cap = table.caption ? "表 " + (index + 1) + "：" + table.caption : "表 " + (index + 1);
+    return cap + "\n" + lines.join("\n");
+  }).filter(Boolean).join("\n\n");
+}
+
 function buildUserPrompt() {
   const paper = state.paper;
   const seg = paper.segments[state.currentIndex];
-  return [
+
+  const parts = [
     "【论文地图】",
     buildMapText(),
     "",
@@ -585,9 +657,16 @@ function buildUserPrompt() {
     "",
     "【当前段落】（所在章节：" + seg.section + "）",
     seg.text,
-    "",
-    "请按格式讲解这一段。",
-  ].join("\n");
+  ];
+
+  // 表格是本段最硬的证据，必须一起给模型，否则它只能对着「如表 2 所示」瞎猜
+  const tableText = tablesToMarkdown(seg.tables || []);
+  if (tableText) {
+    parts.push("", "【本节的表格数据】（已从 LaTeX 结构化）", tableText);
+  }
+
+  parts.push("", "请按格式讲解这一段。");
+  return parts.join("\n");
 }
 
 const RETRY_ANGLES = [
@@ -715,12 +794,47 @@ function renderPaperHead() {
              " · " + (stats.segments || paper.segments.length) + " 段" +
              (stats.chars ? " · " + Math.round(stats.chars / 1000) + " 千字" : "") +
            "</div>" +
-           '<div class="plan-chips">' +
+           '<div class="plan-chips" id="planChips">' +
              "<span class=\"chip\">核心 <b>" + (summary.coreSegments || 0) + "</b> 段</span>" +
              "<span class=\"chip\">略读 <b>" + (summary.skimSegments || 0) + "</b> 段</span>" +
              "<span class=\"chip\">全讲约 <b>" + (summary.minCallsIfAll || paper.segments.length) + "</b> 次调用</span>" +
            "</div>" +
+           '<div style="margin-top:10px;">' +
+             '<button class="btn btn-ghost" id="btnCitations" style="font-size:12px;padding:3px 8px;">' +
+               "看看后来的工作 →" +
+             "</button>" +
+           "</div>" +
+           '<div id="citationHost"></div>' +
          "</div>";
+}
+
+/** 渲染本段附带的表格预览：表头 + 前 4 行，够判断是什么表 */
+function renderTablePreview(tables) {
+  if (!tables || !tables.length) return "";
+
+  return tables.map(function (table, index) {
+    const header = table.header || [];
+    const rows = table.rows || [];
+    if (!header.length && !rows.length) return "";
+
+    const head = header.length
+      ? "<tr>" + header.map(function (c) { return "<th>" + escapeHtml(c) + "</th>"; }).join("") + "</tr>"
+      : "";
+    const body = rows.slice(0, 4).map(function (row) {
+      return "<tr>" + row.map(function (c) { return "<td>" + escapeHtml(c) + "</td>"; }).join("") + "</tr>";
+    }).join("");
+
+    const more = rows.length > 4
+      ? '<div class="table-more">共 ' + rows.length + " 行，讲解时会把完整数据交给模型</div>"
+      : "";
+
+    return '<div class="table-preview">' +
+             '<div class="cap">表 ' + (index + 1) +
+               (table.caption ? "：" + escapeHtml(table.caption.slice(0, 120)) : "") + "</div>" +
+             '<div class="table-scroll"><table>' + head + body + "</table></div>" +
+             more +
+           "</div>";
+  }).filter(Boolean).join("");
 }
 
 function renderSegment(index) {
@@ -735,6 +849,7 @@ function renderSegment(index) {
         '<span class="section-name">' + escapeHtml(seg.section) + "</span>" +
       "</div>" +
       '<div class="source-text">' + escapeHtml(seg.text) + "</div>" +
+      renderTablePreview(seg.tables) +
     "</div>" +
     '<div class="explain" id="explain"><p style="color:var(--faint);">正在生成讲解…</p></div>' +
     '<div class="actions" id="actions" style="display:none;">' +
@@ -750,6 +865,10 @@ function renderSegment(index) {
     '<div id="quizHost"></div>';
 
   bindSegmentActions();
+
+  const citeBtn = document.getElementById("btnCitations");
+  if (citeBtn) citeBtn.onclick = function () { showCitations(); };
+
   document.getElementById("chat").scrollTop = 0;
 }
 
@@ -1276,6 +1395,99 @@ function correctDiagnosis() {
 }
 
 /* ============================================================
+   外部检索（Semantic Scholar）
+   不做「让模型自由联网搜索」——网页摘要不可信且会被注入。
+   用结构化 API 拿元数据，信息可溯源。
+   ============================================================ */
+
+const S2_API = "https://api.semanticscholar.org/graph/v1/paper/";
+
+async function enrichPaper(arxivId) {
+  if (!arxivId) return;
+
+  try {
+    const response = await fetch(
+      S2_API + "arXiv:" + arxivId +
+      "?fields=title,citationCount,influentialCitationCount,year,venue,fieldsOfStudy,referenceCount"
+    );
+    if (!response.ok) return;
+
+    const data = await response.json();
+    state.extra = data;
+
+    const chips = document.getElementById("planChips");
+    if (!chips) return;
+
+    const items = [];
+    if (typeof data.citationCount === "number") {
+      items.push("被引 <b>" + data.citationCount + "</b> 次");
+    }
+    if (data.year) items.push(data.year + " 年");
+    if (data.venue) items.push(escapeHtml(String(data.venue).slice(0, 24)));
+    if (data.fieldsOfStudy && data.fieldsOfStudy.length) {
+      items.push(escapeHtml(data.fieldsOfStudy.slice(0, 2).join(" / ")));
+    }
+
+    items.forEach(function (text) {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = text;
+      chips.appendChild(chip);
+    });
+
+    // 引用数很高的论文，讲解时可以点明它的领域地位
+    if (data.citationCount >= 500) {
+      state.landmark = true;
+    }
+  } catch (err) {
+    /* 限流或断网，静默降级——这不是关键路径 */
+  }
+}
+
+async function showCitations() {
+  const arxivId = state.paper && state.paper.meta && state.paper.meta.arxivId;
+  const host = document.getElementById("citationHost");
+  if (!host) return;
+
+  if (!arxivId) {
+    host.innerHTML = '<p style="font-size:13px;color:var(--faint);">这篇没有 arXiv ID，查不到引用关系。</p>';
+    return;
+  }
+
+  host.innerHTML = '<p style="font-size:13px;color:var(--faint);">正在查询后续工作…</p>';
+
+  try {
+    const response = await fetch(
+      S2_API + "arXiv:" + arxivId +
+      "/citations?fields=title,year,citationCount&limit=12"
+    );
+    if (!response.ok) throw new Error("HTTP " + response.status);
+
+    const data = await response.json();
+    const items = (data.data || []).filter(function (item) { return item.citingPaper; });
+
+    if (!items.length) {
+      host.innerHTML = '<p style="font-size:13px;color:var(--faint);">还没有检索到引用这篇的工作。</p>';
+      return;
+    }
+
+    host.innerHTML =
+      '<div class="cite-list"><div class="cite-title">引用这篇的后续工作（按引用数排序看更准）</div>' +
+      items.map(function (item) {
+        const p = item.citingPaper;
+        const meta = [p.year, p.citationCount ? "被引 " + p.citationCount : ""]
+          .filter(Boolean).join(" · ");
+        return '<div class="cite-item"><div class="cite-name">' + escapeHtml(p.title || "") + "</div>" +
+               '<div class="cite-meta">' + escapeHtml(meta) + "</div></div>";
+      }).join("") +
+      "</div>";
+  } catch (err) {
+    host.innerHTML = '<p style="font-size:13px;color:var(--faint);">' +
+      "查询失败（可能是接口限流，稍后再试）：" + escapeHtml(err.message) + "</p>";
+  }
+}
+
+/* ============================================================
    进度
    ============================================================ */
 
@@ -1334,6 +1546,11 @@ function loadPaper(json) {
   }
 
   goToSegment(startIndex);
+
+  // 后台补元数据（引用数、年份、领域），失败不影响阅读
+  if (json.meta && json.meta.arxivId) {
+    enrichPaper(json.meta.arxivId);
+  }
 }
 
 function handleFile(file) {
