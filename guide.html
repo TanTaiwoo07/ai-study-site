@@ -166,11 +166,12 @@ footer {
     <h2>怎么打开（三种任选一种）</h2>
 
     <h3>方式 A：双击 exe（推荐）</h3>
-    <p>文件在 <code>dist</code> 文件夹里，叫 <code>AI学习站.exe</code>。</p>
+    <p>文件在 <code>dist\AI学习站</code> 这个文件夹里，叫 <code>AI学习站.exe</code>。</p>
     <p>双击它，会弹出一个窗口，这就是全部。关掉窗口就是退出。</p>
     <div class="warn">
-      <b>注意：</b>exe 旁边那个 <code>paper-reader</code> 文件夹不能删，
-      里面装着你已经解析好的论文。移动 exe 时要连它一起移动。
+      <b>注意：</b>exe 旁边那两个东西都不能删——
+      <code>_internal</code> 是程序本体，<code>paper-reader</code> 装着你解析好的论文。
+      移动时要把<b>整个文件夹</b>一起移动，不能只拖 exe。
     </div>
 
     <h3>方式 B：双击 bat 用浏览器打开</h3>
@@ -185,6 +186,12 @@ footer {
     <div class="note">
       三种方式看到的界面完全一样。exe 和 bat 的好处是<b>不受浏览器跨域限制</b>，
       「一键打开论文」才能真正工作。
+    </div>
+
+    <div class="warn">
+      <b>exe 打不开先看磁盘。</b>如果 C 盘剩余空间接近 0，程序会启动失败——
+      而且不会有任何提示，表现就像「双击没反应」。
+      先清理磁盘再试。
     </div>
   </section>
 
