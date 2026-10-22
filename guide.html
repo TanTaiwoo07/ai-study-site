@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>新手教程 · AI 学习站</title>
+<style>
+:root {
+  --bg: #faf9f5; --bg-deep: #f0eee6; --card: #ffffff; --card-soft: #f5f4ed;
+  --line: rgba(31,30,29,.15); --line-soft: rgba(31,30,29,.08);
+  --ink: #141413; --ink-2: #3d3d3a; --dim: #5e5d59; --faint: #73726c;
+  --clay: #d97757; --clay-deep: #c6613f; --clay-wash: #fbeee7;
+  --sage: #788c5d; --sage-wash: #e9f1dc;
+  --ochre: #9a7b3f; --ochre-wash: #f6eedf;
+  --risk: #bf4d43; --risk-wash: #f7ecec;
+  --serif: "Source Serif 4", "Lora", Georgia, "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --r: 12px; --r-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15.5px; line-height: 1.8;
+}
+::selection { background: var(--clay); color: #fff; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; line-height: 1.35; }
+p { margin: 0 0 14px; }
+a { color: var(--clay-deep); }
+code {
+  font-family: ui-monospace, Menlo, monospace; font-size: 13px;
+  background: var(--card-soft); padding: 2px 6px; border-radius: 5px;
+  border: 0.5px solid var(--line-soft); color: var(--ink-2);
+}
+pre {
+  background: var(--card-soft); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 14px 16px; overflow-x: auto; margin: 0 0 14px;
+}
+pre code { background: none; border: none; padding: 0; font-size: 13px; line-height: 1.7; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 0 20px; height: 58px; position: sticky; top: 0; z-index: 10;
+  background: rgba(250,249,245,.92); border-bottom: 0.5px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.topbar h1 { font-size: 15.5px; }
+.topbar h1 span { color: var(--clay); }
+.btn {
+  font-size: 13.5px; padding: 7px 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  text-decoration: none; cursor: pointer;
+}
+.btn:hover { background: var(--card-soft); }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+section { padding: 40px 0 0; }
+.sec-num {
+  font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--clay); font-weight: 700; margin-bottom: 8px;
+}
+h2 { font-size: clamp(20px, 3.2vw, 26px); margin-bottom: 14px; }
+h3 { font-size: 17px; margin: 26px 0 10px; }
+
+.hero { padding: 44px 0 8px; }
+.hero h1 { font-size: clamp(26px, 4.6vw, 36px); margin-bottom: 12px; }
+.lede { font-size: 16.5px; color: var(--ink-2); }
+
+.card {
+  background: var(--card); border: 0.5px solid var(--line);
+  border-radius: var(--r); padding: 20px 22px; margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+}
+.note {
+  background: var(--card-soft); border-left: 2px solid rgba(31,30,29,.25);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 12px 16px; margin: 14px 0; font-size: 14px; color: var(--ink-2);
+}
+.warn {
+  background: var(--ochre-wash); border-left: 2px solid rgba(154,123,63,.45);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 12px 16px; margin: 14px 0; font-size: 14px; color: var(--ink-2);
+}
+.warn b { color: var(--ochre); }
+.ok { color: var(--sage); font-weight: 600; }
+.bad { color: var(--risk); font-weight: 600; }
+
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.steps > li {
+  counter-increment: step; position: relative; padding-left: 42px; margin-bottom: 20px;
+}
+.steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 1px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--clay); color: #fff; font-size: 13px; font-weight: 600;
+  display: grid; place-items: center; font-family: var(--sans);
+}
+.steps > li strong { display: block; margin-bottom: 4px; }
+
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 0.5px solid var(--line-soft); }
+th { color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+td { color: var(--ink-2); }
+tr:last-child td { border-bottom: none; }
+
+details {
+  border: 0.5px solid var(--line); border-radius: var(--r-sm);
+  background: var(--card); margin-bottom: 8px; overflow: hidden;
+}
+details summary {
+  padding: 12px 16px; cursor: pointer; font-size: 14.5px; font-weight: 500;
+  list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: "＋ "; color: var(--clay); }
+details[open] summary::before { content: "− "; }
+details[open] summary { border-bottom: 0.5px solid var(--line-soft); }
+details .body { padding: 14px 16px; font-size: 14px; color: var(--ink-2); }
+details .body p:last-child { margin-bottom: 0; }
+
+footer {
+  margin-top: 50px; padding: 26px 0 50px;
+  border-top: 0.5px solid var(--line);
+  font-size: 12.5px; color: var(--faint); line-height: 1.9;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>AI <span>学习站</span> · 新手教程</h1>
+  <a class="btn" href="index.html">← 回首页</a>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <h1>从零开始用它</h1>
+    <p class="lede">
+      这篇教程假设你什么都没配过。跟着做，十分钟能读上第一篇论文。
+    </p>
+  </section>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-num">01</div>
+    <h2>它到底是个什么东西</h2>
+    <p>
+      三个独立的部分，共用一套界面：
+    </p>
+    <table>
+      <tr><th>功能</th><th>干什么用</th><th>需要花钱吗</th></tr>
+      <tr><td><b>AI 学习站</b></td><td>自己写的知识地图和概念页</td><td>不需要</td></tr>
+      <tr><td><b>论文搜索</b></td><td>按方向找论文</td><td>不需要</td></tr>
+      <tr><td><b>论文精读</b></td><td>让 AI 逐段给你讲</td><td><b>需要自己的 API Key</b></td></tr>
+    </table>
+    <div class="note">
+      只有「论文精读」要花钱，因为它在调用大模型。一篇论文大约几毛钱到一两块，
+      取决于你用什么模型。
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-num">02</div>
+    <h2>怎么打开（三种任选一种）</h2>
+
+    <h3>方式 A：双击 exe（推荐）</h3>
+    <p>文件在 <code>dist</code> 文件夹里，叫 <code>AI学习站.exe</code>。</p>
+    <p>双击它，会弹出一个窗口，这就是全部。关掉窗口就是退出。</p>
+    <div class="warn">
+      <b>注意：</b>exe 旁边那个 <code>paper-reader</code> 文件夹不能删，
+      里面装着你已经解析好的论文。移动 exe 时要连它一起移动。
+    </div>
+
+    <h3>方式 B：双击 bat 用浏览器打开</h3>
+    <p>文件是 <code>paper-reader\启动阅读器.bat</code>。它会：
+      起一个本地服务 → 自动打开浏览器。</p>
+    <p>用完把那个黑色命令行窗口关掉就行。</p>
+
+    <h3>方式 C：直接看线上的</h3>
+    <p>浏览器打开 <code>tantaiwoo07.github.io/ai-study-site</code>。</p>
+    <p>优点是不用带文件、手机也能看。缺点是精读功能要联网调 API。</p>
+
+    <div class="note">
+      三种方式看到的界面完全一样。exe 和 bat 的好处是<b>不受浏览器跨域限制</b>，
+      「一键打开论文」才能真正工作。
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-num">03</div>
+    <h2>第一次：配一个 API Key</h2>
+    <p>
+      这是唯一需要动手配置的地方。不用怕，就是复制粘贴一串字符。
+    </p>
+
+    <h3>API Key 是什么</h3>
+    <p>
+      可以理解成一张「充值卡卡号」。AI 服务商用这串字符认人、计费。
+      你把 Key 填进这个网站，它就直接发给厂商，中间不经过任何服务器。
+    </p>
+
+    <h3>去哪申请（以 DeepSeek 为例，最便宜）</h3>
+    <ol class="steps">
+      <li>
+        <strong>打开 platform.deepseek.com</strong>
+        注册账号，用手机号就行。
+      </li>
+      <li>
+        <strong>左边菜单找「API keys」</strong>
+        点「创建 API key」，起个名字（随便写，比如 my-study）。
+      </li>
+      <li>
+        <strong>复制那串 sk- 开头的字符</strong>
+        <span class="bad">只显示一次</span>，关掉就看不到了，先粘到记事本。
+      </li>
+      <li>
+        <strong>充值</strong>
+        最少充 10 块就够读很多篇了。不充值调不通。
+      </li>
+    </ol>
+
+    <h3>填进网站</h3>
+    <p>打开精读页面，右上角点「设置」，三个格子这样填：</p>
+    <table>
+      <tr><th>字段</th><th>填什么</th></tr>
+      <tr><td>API 地址</td><td><code>https://api.deepseek.com/v1</code></td></tr>
+      <tr><td>API Key</td><td>你刚复制的那串 <code>sk-...</code></td></tr>
+      <tr><td>模型名</td><td><code>deepseek-chat</code></td></tr>
+    </table>
+    <p>填完右上角的状态会从「未配置 API」变成 <span class="ok">deepseek-chat</span>，就成功了。</p>
+    <div class="note">
+      Key 只存在你这台电脑的浏览器里。换电脑要重新填。
+      如果不想留痕，用完可以在设置里清空。
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-num">04</div>
+    <h2>完整走一遍</h2>
+
+    <ol class="steps">
+      <li>
+        <strong>打开精读页，点一篇现成的</strong>
+        页面上列着 7 篇已经处理好的论文。第一次点 <b>PIDNet</b> 那一行
+        ——它最短，45 段，十几分钟能读完。
+      </li>
+      <li>
+        <strong>看左边目录</strong>
+        按章节分组，标着「必读 / 可略读 / 附录」。不想全读就只点必读的。
+      </li>
+      <li>
+        <strong>读讲解</strong>
+        每段会给你三段话：这段在做什么、白话解释、它和上下文的关系。
+      </li>
+      <li>
+        <strong>没看懂就点「没懂，换个说法」</strong>
+        它会换角度重讲，最多换四次。四次还不懂会直接告诉你缺哪个前置知识。
+      </li>
+      <li>
+        <strong>读完一段，点「检验一下」</strong>
+        它会出一道题，你用大白话回答。然后给你一份诊断：
+        <br />· 已掌握什么 · 漏了什么 · 哪里有误解
+        <br />答不出来就写「不知道」，这也算有效信息，不会扣分。
+      </li>
+      <li>
+        <strong>读完整篇，点「下一段」一路走</strong>
+        进度会自动存。下次打开从上次那段接上。
+      </li>
+    </ol>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-num">05</div>
+    <h2>想读别的论文怎么办</h2>
+    <p>分两种情况。</p>
+
+    <h3>情况一：arXiv 上的论文</h3>
+    <p>arXiv 是个论文预印本网站，计算机方向的论文基本都在上面。</p>
+    <ol class="steps">
+      <li>
+        <strong>在搜索页找到它的编号</strong>
+        比如 <code>2206.02066</code>。搜索结果里有「复制 ID」按钮。
+      </li>
+      <li>
+        <strong>打开命令行</strong>
+        按 <code>Win + R</code>，输入 <code>cmd</code>，回车。
+      </li>
+      <li>
+        <strong>切到工具目录，跑一行命令</strong>
+        <pre><code>cd /d "C:\Users\Lenovo\WorkBuddy\AI 深度学习模型\paper-reader"
+python m0_fetch_parse.py 2206.02066</code></pre>
+        等几秒，它会打印章节结构和质量报告。
+      </li>
+      <li>
+        <strong>回精读页刷新</strong>
+        新论文会出现在列表里，点开就能读。
+      </li>
+    </ol>
+
+    <h3>情况二：手上只有 PDF 文件</h3>
+    <p>命令换成这个（把路径换成你自己的）：</p>
+    <pre><code>cd /d "C:\Users\Lenovo\WorkBuddy\AI 深度学习模型\paper-reader"
+python parse_local.py "D:\论文\xxx.pdf"</code></pre>
+    <div class="warn">
+      <b>PDF 的效果比 arXiv 差。</b>PDF 里公式是图片，抽出来是碎片；
+      表格也没有行列结构。能用 arXiv 就用 arXiv。
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <div class="sec-num">06</div>
+    <h2>会遇到的问题</h2>
+
+    <details>
+      <summary>点了论文没反应，弹出「自动读取失败」</summary>
+      <div class="body">
+        <p>多半是直接用浏览器双击打开了 <code>reader.html</code>。
+        浏览器出于安全不允许网页读取同目录的文件。</p>
+        <p>解决：改用 <code>AI学习站.exe</code> 或 <code>启动阅读器.bat</code>。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>提示「调用失败：接口返回 401」</summary>
+      <div class="body">
+        <p>Key 填错了，或者没复制完整。回设置里重新粘贴一次。</p>
+        <p>也有可能是账户没充值——DeepSeek 需要余额大于 0 才能调用。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>提示「接口返回 402 或 余额不足」</summary>
+      <div class="body">
+        <p>账户没钱了。去 platform.deepseek.com 充一点。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>提示「接口返回 429」</summary>
+      <div class="body">
+        <p>调得太快被限流了，等十几秒再点。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>搜索页搜不出东西</summary>
+      <div class="body">
+        <p>先试试更短的关键词。比如「semantic segmentation」比
+        「real-time semantic segmentation for autonomous driving」效果好得多。</p>
+        <p>也可能是网络问题，OpenAlex 在国外，偶尔连不上。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>一篇文章要花多少钱</summary>
+      <div class="body">
+        <p>按核心段数算。PIDNet 核心 40 段 ≈ 40 次调用，DeepSeek 大约几毛钱。</p>
+        <p>SAM 3 那种 20 万字的大论文，全讲要 268 次调用，建议只读核心章节。</p>
+        <p>「检验一下」每次多两次调用（出题一次、诊断一次）。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>我完全不懂 AI，读这些论文有意义吗</summary>
+      <div class="body">
+        <p>先说结论：现在读论文，收益不如先把基础打牢。</p>
+        <p>这个工具解决的是「读懂一篇具体的论文」，不解决「建立知识体系」。
+        如果你连反向传播是什么都还不清楚，读 SAM 3 只会得到一堆解释术语的解释。</p>
+        <p>建议顺序：先用学习站把梯度下降、过拟合、卷积这几块过一遍，
+        再回来用它读论文。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>进度存在哪，会不会丢</summary>
+      <div class="body">
+        <p>存在浏览器本地（localStorage），不上传。</p>
+        <p>换浏览器、清缓存、换电脑都会丢。重要的话自己记一下读到第几段。</p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    还有问题就问——把报错原文贴出来，比描述「打不开」有用得多。<br />
+    这套东西的详细设计在 <code>PAPER-READER-SPEC.md</code>，技术细节在
+    <code>paper-reader/README.md</code>。
+  </footer>
+
+</div>
+</body>
+</html>

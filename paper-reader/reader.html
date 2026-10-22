@@ -1695,15 +1695,27 @@ async function loadPaperBySlug(slug, btn) {
   } catch (err) {
     btn.querySelector(".pick-go").textContent = original;
     btn.disabled = false;
+
+    const detail = (err && err.message) ? err.message : String(err);
+    const isFile = location.protocol === "file:";
+
     alert(
-      "自动读取失败。\n\n" +
-      "如果你是在本地双击打开的 reader.html，浏览器不允许网页读取同目录文件，" +
-      "这是安全限制，不是 bug。\n\n" +
-      "解决办法二选一：\n" +
-      "1. 点下面「手动选择 paper.json」，找到 out/" + slug + "/paper.json\n" +
-      "2. 把整个目录用本地服务打开（python -m http.server）"
+      "自动读取失败：" + detail + "\n\n" +
+      (isFile
+        ? "你现在是用浏览器直接打开本地文件（地址栏是 file:// 开头），\n" +
+          "浏览器不允许网页读取同目录的文件，这是安全限制。\n\n" +
+          "改用「AI学习站.exe」或「启动阅读器.bat」打开就没有这个问题。"
+        : "服务在跑但读不到文件。确认这个目录下有 out/" + slug + "/paper.json：\n" +
+          dataLocationHint())
     );
   }
+}
+
+function dataLocationHint() {
+  // 桌面版从 127.0.0.1 打开，数据在 exe 同级；本地服务版在 paper-reader/ 下
+  return location.port && location.port !== "80" && location.port !== "443"
+    ? "（看 exe 或项目根目录下的 paper-reader/out/）"
+    : "（看站点根目录下的 paper-reader/out/）";
 }
 
 /* ============================================================

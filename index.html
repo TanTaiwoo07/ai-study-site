@@ -179,6 +179,7 @@ section { padding: 68px 0 0; }
   display: grid; grid-template-columns: 1fr; gap: 12px;
 }
 @media (min-width: 700px) { .tool-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .tool-grid { grid-template-columns: repeat(3, 1fr); } }
 
 .tool-card {
   display: block; background: var(--card);
@@ -414,6 +415,11 @@ footer {
     </div>
 
     <div class="tool-grid">
+      <a class="tool-card" href="guide.html">
+        <div class="tool-name">新手教程</div>
+        <div class="tool-desc">从零开始：怎么打开、怎么配 API、怎么读第一篇</div>
+        <div class="tool-meta">十分钟走完</div>
+      </a>
       <a class="tool-card" href="paper-reader/search.html">
         <div class="tool-name">论文搜索</div>
         <div class="tool-desc">按方向、时间、引用数筛，找到该读的那几篇</div>
